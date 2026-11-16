@@ -1,0 +1,28 @@
+---
+import type { Post } from '../lib/posts';
+import { formatDate, isoDate } from '../lib/dates';
+import TagList from './TagList.astro';
+
+interface Props {
+  posts: Post[];
+}
+
+const { posts } = Astro.props;
+---
+
+<ol class="post-list">
+  {
+    posts.map((post) => (
+      <li>
+        <article>
+          <time datetime={isoDate(post.data.date)}>{formatDate(post.data.date)}</time>
+          <h3>
+            <a href={`/posts/${post.id}/`}>{post.data.title}</a>
+          </h3>
+          <p class="description">{post.data.description}</p>
+          <TagList tags={post.data.tags} />
+        </article>
+      </li>
+    ))
+  }
+</ol>

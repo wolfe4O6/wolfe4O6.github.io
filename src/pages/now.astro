@@ -1,0 +1,28 @@
+---
+import { getEntry, render } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import { formatDate, isoDate } from '../lib/dates';
+
+const entry = await getEntry('pages', 'now');
+if (!entry) {
+  throw new Error('Missing src/content/pages/now.md');
+}
+const { Content } = await render(entry);
+---
+
+<Base title="Now" description="What William Kearns is up to right now.">
+  <header class="page-head">
+    <p class="kicker">Now</p>
+    <h1>What I'm up to</h1>
+    {
+      entry.data.updated && (
+        <p class="updated">
+          Updated <time datetime={isoDate(entry.data.updated)}>{formatDate(entry.data.updated)}</time>
+        </p>
+      )
+    }
+  </header>
+  <div class="prose">
+    <Content />
+  </div>
+</Base>

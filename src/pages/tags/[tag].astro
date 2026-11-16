@@ -1,0 +1,29 @@
+---
+import Base from '../../layouts/Base.astro';
+import ArchiveList from '../../components/ArchiveList.astro';
+import { getPosts } from '../../lib/posts';
+import { collectTags, postsWithTag } from '../../lib/tags';
+
+export async function getStaticPaths() {
+  const posts = await getPosts();
+  return collectTags(posts).map((tag) => ({
+    params: { tag: tag.slug },
+    props: { label: tag.label },
+  }));
+}
+
+const { tag } = Astro.params;
+const { label } = Astro.props;
+const posts = postsWithTag(await getPosts(), tag ?? '');
+const countLabel = posts.length === 1 ? '1 post' : `${posts.length} posts`;
+---
+
+<Base title={label} description={`Posts tagged ${label}.`}>
+  <header class="page-head">
+    <p class="kicker">Tag</p>
+    <h1>{label}</h1>
+    <p class="count">{countLabel}</p>
+  </header>
+  <ArchiveList posts={posts} />
+  <p class="more"><a href="/tags/">All tags</a></p>
+</Base>
