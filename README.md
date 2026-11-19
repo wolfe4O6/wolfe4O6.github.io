@@ -43,6 +43,47 @@ What you are up to lives in one file:
 
 That file is the Now section on the home page and the page at `/now/`. Change the words, and change `updated:` at the top when you do.
 
+## Edit projects
+
+Public GitHub projects live in one list:
+
+`src/data/projects.ts`
+
+Each block has a `name`, the repository `repo` slug, and the `description` from GitHub. The site links to `https://github.com/wolfe4O6/` plus that slug. Set `featured: true` to also show the project on the home page. Set it to `false`, or delete the block, to take it off the home page. The full list is always at `/projects/`.
+
+## Add a photo
+
+1. Put the image in `public/photos/`. JPG, PNG, WebP, and SVG all work.
+2. Add an entry to `src/data/photos.ts`:
+
+   ```ts
+   {
+     src: '/photos/my-picture.jpg',
+     alt: 'Describe the picture',
+     caption: 'A short caption.',
+   },
+   ```
+
+3. Delete the placeholder drawings when you do not want them. They are sketches, not photographs, and each one is marked Placeholder.
+
+`src` starts with `/photos/` because that folder is served as-is.
+
+## Edit what you're listening to
+
+The shelf on the home page and on `/now` comes from:
+
+`src/data/listening.ts`
+
+Replace the placeholder rows, or delete them. Each one needs a `title` and an `artist`. `note` is optional.
+
+To show a Spotify player on the Now page, paste a link:
+
+```ts
+spotify: 'https://open.spotify.com/track/xxxxxxxx',
+```
+
+Track, album, playlist, episode, and show links from `open.spotify.com` work. Anything else is ignored. The home page lists the titles and leaves the player for the Now page.
+
 ## Edit the About page
 
 The short bio at the top of `/about/` (name, the line “A tinkerer learning the ways of the world.”, Missoula, GitHub) comes from `src/site.ts`.
@@ -90,10 +131,14 @@ This is a user site (`username.github.io`), so it is served from the root of tha
 ```text
 src/content/posts/     notes, one Markdown file each
 src/content/pages/     now.md and about.md
+src/data/projects.ts   GitHub projects
+src/data/photos.ts     photo gallery entries
+src/data/listening.ts  what you're listening to
 src/pages/             the site pages, archive, tags, RSS
 src/styles/global.css  colors, type, and layout
 src/site.ts            name, bio line, town, GitHub link
+public/photos/         image files for the gallery
 public/                favicon and other files served as-is
 ```
 
-The archive page (`/archive/`) lists every published note, grouped by year. Tag pages are generated from the `tags` on each post. `/rss.xml` and the sitemap update on every build.
+The archive page (`/archive/`) lists every published note, grouped by year. Tag pages are generated from the `tags` on each post. `/projects/`, `/photos/`, and the listening shelf are driven by the files in `src/data/`. `/rss.xml` and the sitemap update on every build.

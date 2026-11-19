@@ -13,6 +13,8 @@ interface Props {
   description?: string;
   ogType?: 'website' | 'article';
   published?: Date;
+  /** Wider desk for home, projects, and photos. Reading pages stay narrow. */
+  wide?: boolean;
 }
 
 const {
@@ -20,6 +22,7 @@ const {
   description = site.description,
   ogType = 'website',
   published,
+  wide = false,
 } = Astro.props;
 
 const pageTitle = title ? `${title} · ${site.name}` : site.name;
@@ -31,7 +34,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#f3eee6" />
+    <meta name="theme-color" content="#f3e6d0" />
     <script is:inline>
       (() => {
         const key = 'theme';
@@ -45,7 +48,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
         }
         document.documentElement.dataset.theme = theme;
         const color = document.querySelector('meta[name="theme-color"]');
-        if (color) color.setAttribute('content', theme === 'dark' ? '#1b1714' : '#f3eee6');
+        if (color) color.setAttribute('content', theme === 'dark' ? '#16110e' : '#f3e6d0');
       })();
     </script>
     <title>{pageTitle}</title>
@@ -73,7 +76,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <a class="skip-link" href="#content">Skip to content</a>
     <Header />
     <main id="content">
-      <div class="shell">
+      <div class:list={['shell', { wide }]}>
         <slot />
       </div>
     </main>

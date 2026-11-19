@@ -1,0 +1,52 @@
+---
+import { listening, spotifyEmbed } from '../data/listening';
+
+interface Props {
+  /** Hide Spotify players. The home page uses this; /now shows them. */
+  compact?: boolean;
+}
+
+const { compact = false } = Astro.props;
+const items = compact ? listening.slice(0, 3) : listening;
+---
+
+{
+  items.length > 0 && (
+    <section class="listening" aria-labelledby="listening-heading">
+      <div class="section-head">
+        <h2 id="listening-heading">What I'm listening to</h2>
+        {compact && <a href="/now/">On the Now page</a>}
+      </div>
+      <ol class="listen-list">
+        {items.map((item) => {
+          const embed = spotifyEmbed(item.spotify);
+          return (
+            <li class="listen-item">
+              <span class="disc" aria-hidden="true"></span>
+              <div>
+                {item.placeholder && <p class="mini-label">Placeholder</p>}
+                <p class="listen-title">{item.title}</p>
+                <p class="listen-artist">{item.artist}</p>
+                {item.note && <p class="listen-note">{item.note}</p>}
+                {!compact && embed && (
+                  <iframe
+                    class="spotify"
+                    src={embed}
+                    title={`Spotify embed: ${item.title}`}
+                    loading="lazy"
+                    allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                  />
+                )}
+                {!compact && item.spotify && !embed && (
+                  <p class="listen-note">
+                    That Spotify link does not look like an open.spotify.com track, album, playlist, episode, or show.
+                  </p>
+                )}
+              </div>
+            </li>
+          );
+        })}
+      </ol>
+    </section>
+  )
+}

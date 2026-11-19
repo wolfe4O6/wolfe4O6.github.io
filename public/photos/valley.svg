@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f6c7a0"/>
+      <stop offset="0.45" stop-color="#f3d7b4"/>
+      <stop offset="1" stop-color="#c9dcea"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="1000" fill="url(#sky)"/>
+  <circle cx="620" cy="180" r="70" fill="#ffe1b5" opacity="0.9"/>
+  <path d="M0 620 C 140 560 220 500 340 530 C 460 560 520 470 660 490 C 740 502 780 470 800 480 L 800 1000 L 0 1000 Z" fill="#8eabbc"/>
+  <path d="M0 760 C 120 700 210 640 340 670 C 480 704 540 620 700 650 C 760 662 800 640 800 650 L 800 1000 L 0 1000 Z" fill="#3f5d46"/>
+  <path d="M520 690 L 560 610 L 590 650 L 620 590 L 660 690" fill="none" stroke="#f4efe6" stroke-width="14" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M80 820 L 120 700 L 160 820 Z" fill="#243c2c"/>
+  <path d="M150 830 L 184 730 L 218 830 Z" fill="#2c4636"/>
+  <path d="M0 860 L 800 900 L 800 1000 L 0 1000 Z" fill="#c4b08a"/>
+  <path d="M40 900 C 180 880 260 940 400 910 S 640 860 800 900" fill="none" stroke="#4f8b90" stroke-width="8"/>
+  <text x="40" y="70" fill="#6b4a32" font-family="Georgia, serif" font-size="28">placeholder</text>
+</svg>

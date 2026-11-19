@@ -5,16 +5,18 @@ import TagList from './TagList.astro';
 
 interface Props {
   posts: Post[];
+  variant?: 'list' | 'cards';
 }
 
-const { posts } = Astro.props;
+const { posts, variant = 'list' } = Astro.props;
 ---
 
-<ol class="post-list">
+<ol class:list={['post-list', variant === 'cards' && 'post-cards']}>
   {
     posts.map((post) => (
       <li>
-        <article>
+        <article class={variant === 'cards' ? 'notecard' : undefined}>
+          {variant === 'cards' && <span class="tape" aria-hidden="true" />}
           <time datetime={isoDate(post.data.date)}>{formatDate(post.data.date)}</time>
           <h3>
             <a href={`/posts/${post.id}/`}>{post.data.title}</a>

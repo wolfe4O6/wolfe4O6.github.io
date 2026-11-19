@@ -1,6 +1,8 @@
 ---
 import { getEntry, render } from 'astro:content';
 import Base from '../layouts/Base.astro';
+import Listening from '../components/Listening.astro';
+import River from '../components/River.astro';
 import { formatDate, isoDate } from '../lib/dates';
 
 const entry = await getEntry('pages', 'now');
@@ -22,7 +24,10 @@ const { Content } = await render(entry);
       )
     }
   </header>
-  <div class="prose">
+  <div class="prose notecard now-card">
+    <span class="tape" aria-hidden="true"></span>
     <Content />
   </div>
+  <River />
+  <Listening />
 </Base>
