@@ -2,6 +2,8 @@
 
 A small personal site and digital archive: a calm place to check in, and a shelf for notes over time. It is an [Astro](https://astro.build) site, published at [wolfe4O6.github.io](https://wolfe4O6.github.io).
 
+The home page is a little toy of Hellgate Canyon: Mount Sentinel with the M, Mount Jumbo with the L, and the Clark Fork between them. Drag it, pull the lantern cord, and try the weather buttons. It is play, not a diary.
+
 The three posts already in the project are **placeholders**. Edit them or delete them. They are not a record of anything that happened.
 
 ## Write a new post

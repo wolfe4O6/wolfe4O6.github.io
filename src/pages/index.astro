@@ -1,6 +1,7 @@
 ---
 import { getEntry, render } from 'astro:content';
 import Base from '../layouts/Base.astro';
+import Diorama from '../components/Diorama.astro';
 import PostList from '../components/PostList.astro';
 import Listening from '../components/Listening.astro';
 import ProjectCard from '../components/ProjectCard.astro';
@@ -37,16 +38,7 @@ const person = {
     <script type="application/ld+json" set:html={JSON.stringify(person)} />
   </Fragment>
 
-  <header class="intro">
-    <p class="kicker">{site.location}</p>
-    <h1>{site.name}</h1>
-    <p class="lede">{site.description}</p>
-    <p class="intro-note">
-      A calm little space to check in on what I'm doing, and an archive of me for later.
-    </p>
-  </header>
-
-  <River label="Clark Fork" />
+  <Diorama />
 
   <div class="home-split">
     <section class="notecard now-card" aria-labelledby="now-heading">

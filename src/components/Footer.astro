@@ -13,16 +13,26 @@ import { site } from '../site';
           <a rel="me" href={site.github}>GitHub</a>
           <a href="/projects/">Projects</a>
           <a href="/photos/">Photos</a>
-          <a href="/archive/">Archive</a>
+          <a href="/archive/">Writing</a>
           <a href="/rss.xml">RSS</a>
         </p>
         <p class="colophon">A personal archive. Set in Fraunces and Literata.</p>
       </div>
-      <div class="stamp" aria-hidden="true">
+      <button class="stamp" type="button" aria-label="Spin the Missoula stamp">
         <span class="stamp-m">M</span>
         <span>MISSOULA</span>
         <span>MT</span>
-      </div>
+      </button>
+      <script>
+        const stamp = document.querySelector<HTMLButtonElement>('.stamp');
+        if (stamp) {
+          stamp.addEventListener('click', () => {
+            stamp.classList.remove('stamp-spin');
+            void stamp.offsetWidth;
+            stamp.classList.add('stamp-spin');
+          });
+        }
+      </script>
     </div>
   </div>
 </footer>

@@ -1,33 +1,24 @@
 ---
 import ThemeToggle from './ThemeToggle.astro';
-import Ridge from './Ridge.astro';
 
 const path = Astro.url.pathname;
-const archiveOn =
-  path.startsWith('/archive') || path.startsWith('/posts') || path.startsWith('/tags');
+const writingOn = path.startsWith('/archive') || path.startsWith('/posts') || path.startsWith('/tags');
 
 const links = [
-  { href: '/now/', label: 'Now', on: path.startsWith('/now') },
+  { href: '/archive/', label: 'Writing', on: writingOn },
   { href: '/projects/', label: 'Projects', on: path.startsWith('/projects') },
   { href: '/photos/', label: 'Photos', on: path.startsWith('/photos') },
-  { href: '/archive/', label: 'Archive', on: archiveOn },
+  { href: '/now/', label: 'Now', on: path.startsWith('/now') },
   { href: '/about/', label: 'About', on: path.startsWith('/about') },
 ];
 ---
 
 <header class="site-header">
-  <div class="stars" aria-hidden="true">
-    <span></span><span></span><span></span><span></span><span></span><span></span><span></span>
-  </div>
   <div class="shell wide header-bar">
     <a class="wordmark" href="/" aria-current={path === '/' ? 'page' : undefined}>
-      <span class="sign">
-        <span class="screws" aria-hidden="true"></span>
-        <span class="bulbs" aria-hidden="true">
-          {Array.from({ length: 8 }, () => <i></i>)}
-        </span>
-        <span class="sign-name">William Kearns</span>
-      </span>
+      <span class="ml-mark" aria-hidden="true">M</span>
+      <span class="sign-name">William Kearns</span>
+      <span class="ml-mark" aria-hidden="true">L</span>
     </a>
     <div class="nav-cluster">
       <nav class="nav" aria-label="Primary">
@@ -42,5 +33,4 @@ const links = [
       <ThemeToggle />
     </div>
   </div>
-  <Ridge />
 </header>
