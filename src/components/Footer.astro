@@ -18,21 +18,11 @@ import { site } from '../site';
         </p>
         <p class="colophon">A personal archive. Set in Fraunces and Literata.</p>
       </div>
-      <button class="stamp" type="button" aria-label="Spin the Missoula stamp">
+      <p class="stamp" aria-hidden="true">
         <span class="stamp-m">M</span>
         <span>MISSOULA</span>
         <span>MT</span>
-      </button>
-      <script>
-        const stamp = document.querySelector<HTMLButtonElement>('.stamp');
-        if (stamp) {
-          stamp.addEventListener('click', () => {
-            stamp.classList.remove('stamp-spin');
-            void stamp.offsetWidth;
-            stamp.classList.add('stamp-spin');
-          });
-        }
-      </script>
+      </p>
     </div>
   </div>
 </footer>

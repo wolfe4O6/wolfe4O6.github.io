@@ -1,0 +1,125 @@
+---
+import { Image } from 'astro:assets';
+import sentinel from '../assets/missoula/sentinel-m.webp';
+import jumbo from '../assets/missoula/jumbo-l.webp';
+import { heroPhotos } from '../data/hero-photos';
+import { site } from '../site';
+
+const images = { m: sentinel, l: jumbo };
+---
+
+<section class="photo-hero" data-grade="day" data-slide="m" aria-label="Missoula, the M and the L">
+  <div class="hero-slides">
+    {
+      heroPhotos.map((photo, index) => (
+        <Image
+          src={images[photo.id]}
+          alt={photo.alt}
+          widths={[640, 1100, 1600]}
+          sizes="100vw"
+          class:list={['hero-photo', index === 0 && 'is-on', `hero-${photo.id}`]}
+          loading={index === 0 ? 'eager' : 'eager'}
+          fetchpriority={index === 0 ? 'high' : 'low'}
+          data-slide={photo.id}
+        />
+      ))
+    }
+    {
+      heroPhotos.map((photo) => (
+        <a
+          class:list={['hero-pin', `pin-${photo.id}`]}
+          href={photo.href}
+          style={`left:${photo.pin.left};top:${photo.pin.top}`}
+        >
+          <span>{photo.label}</span>
+          <small>{photo.place}</small>
+        </a>
+      ))
+    }
+  </div>
+
+  <p class="hero-weather" data-live>Checking the sky over Missoula…</p>
+  <button class="grade-toggle" type="button" data-grade-toggle aria-pressed="false">
+    Night
+  </button>
+
+  <div class="hero-copy">
+    <p class="kicker">Missoula, Montana</p>
+    <h1>{site.name}</h1>
+    <p class="lede">{site.description}</p>
+    <p class="hero-credits">
+    {
+      heroPhotos.map((photo, index) => (
+        <>
+          {index > 0 && <span aria-hidden="true"> · </span>}
+          <span>
+            {photo.label}: {photo.credit.photographer},{' '}
+            <a href={photo.credit.licenseUrl}>{photo.credit.license}</a>,{' '}
+            <a href={photo.credit.sourceUrl}>Wikimedia Commons</a>
+          </span>
+        </>
+      ))
+    }
+    </p>
+  </div>
+</section>
+
+<script>
+  const root = document.querySelector<HTMLElement>('.photo-hero');
+  if (root && root.dataset.ready !== '1') {
+    root.dataset.ready = '1';
+    const slides = [...root.querySelectorAll<HTMLImageElement>('.hero-photo')];
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let index = 0;
+
+    const show = (next: number) => {
+      slides.forEach((slide, i) => slide.classList.toggle('is-on', i === next));
+      const id = slides[next]?.dataset.slide ?? 'm';
+      root.dataset.slide = id;
+      index = next;
+    };
+
+    if (!reduced && slides.length > 1) {
+      window.setInterval(() => show((index + 1) % slides.length), 8000);
+    }
+
+    const gradeButton = root.querySelector<HTMLButtonElement>('[data-grade-toggle]');
+    gradeButton?.addEventListener('click', () => {
+      const night = root.dataset.grade !== 'night';
+      root.dataset.grade = night ? 'night' : 'day';
+      gradeButton.setAttribute('aria-pressed', night ? 'true' : 'false');
+      gradeButton.textContent = night ? 'Day' : 'Night';
+    });
+
+    const live = root.querySelector<HTMLElement>('[data-live]');
+    const url =
+      'https://api.open-meteo.com/v1/forecast?latitude=46.8721&longitude=-113.9940&current=temperature_2m,weather_code&temperature_unit=fahrenheit';
+    const label = (code: number) => {
+      if (code === 0) return 'clear';
+      if (code <= 3) return 'cloudy';
+      if (code === 45 || code === 48) return 'foggy';
+      if ((code >= 71 && code <= 77) || code === 85 || code === 86) return 'snowy';
+      if (code >= 95) return 'stormy';
+      if (code >= 51) return 'rainy';
+      return 'outside';
+    };
+    const load = async () => {
+      if (!live) return;
+      try {
+        const ctrl = new AbortController();
+        const timer = window.setTimeout(() => ctrl.abort(), 5000);
+        const res = await fetch(url, { signal: ctrl.signal });
+        window.clearTimeout(timer);
+        if (!res.ok) throw new Error('weather');
+        const data = (await res.json()) as { current?: { temperature_2m?: number; weather_code?: number } };
+        const temp = data.current?.temperature_2m;
+        const code = data.current?.weather_code;
+        if (typeof temp !== 'number' || typeof code !== 'number') throw new Error('weather');
+        live.textContent = `Missoula right now · ${Math.round(temp)}°F · ${label(code)}`;
+      } catch {
+        live.textContent = "Missoula weather didn't load.";
+      }
+    };
+    void load();
+  }
+</script>

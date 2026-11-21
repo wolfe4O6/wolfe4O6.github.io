@@ -2,7 +2,12 @@
 
 A small personal site and digital archive: a calm place to check in, and a shelf for notes over time. It is an [Astro](https://astro.build) site, published at [wolfe4O6.github.io](https://wolfe4O6.github.io).
 
-The home page is a little toy of Hellgate Canyon: Mount Sentinel with the M, Mount Jumbo with the L, and the Clark Fork between them. Drag it, pull the lantern cord, and try the weather buttons. It is play, not a diary.
+The home page opens on two photographs of Missoula: the M on Mount Sentinel, and the L on Mount Jumbo. They crossfade. A small control softens the picture toward night. The weather chip is the current Missoula reading from Open-Meteo.
+
+Photo credits:
+
+- The M on Mount Sentinel. Lance Fisher, [CC BY-SA 2.0](https://creativecommons.org/licenses/by-sa/2.0/). [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:View_of_Mt._Sentinal_from_Bear%27s_Brew_-_Flickr_-_lancefisher.jpg).
+- The L on Mount Jumbo. Chris Phan, [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/). [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Mount_Jumbo_in_Missoula.jpg).
 
 The three posts already in the project are **placeholders**. Edit them or delete them. They are not a record of anything that happened.
 

@@ -1,7 +1,7 @@
 ---
 import { getEntry, render } from 'astro:content';
 import Base from '../layouts/Base.astro';
-import Diorama from '../components/Diorama.astro';
+import PhotoHero from '../components/PhotoHero.astro';
 import PostList from '../components/PostList.astro';
 import Listening from '../components/Listening.astro';
 import ProjectCard from '../components/ProjectCard.astro';
@@ -38,7 +38,7 @@ const person = {
     <script type="application/ld+json" set:html={JSON.stringify(person)} />
   </Fragment>
 
-  <Diorama />
+  <PhotoHero />
 
   <div class="home-split">
     <section class="notecard now-card" aria-labelledby="now-heading">
