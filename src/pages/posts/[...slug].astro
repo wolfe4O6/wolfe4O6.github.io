@@ -1,0 +1,49 @@
+---
+import { render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import TagList from '../../components/TagList.astro';
+import { getPosts } from '../../lib/posts';
+import { formatDate, isoDate } from '../../lib/dates';
+
+export async function getStaticPaths() {
+  const posts = await getPosts();
+  return posts.map((post) => ({
+    params: { slug: post.id },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+---
+
+<Base
+  title={post.data.title}
+  description={post.data.description}
+  ogType="article"
+  published={post.data.date}
+>
+  <article class="post notecard">
+    <p class="back"><a href="/archive/">Archive</a></p>
+    {
+      post.data.placeholder && (
+        <p class="note" role="note">
+          <strong>Placeholder.</strong> This is sample text so the archive is not empty. Edit or delete
+          the file in <code>src/content/posts</code> whenever you like.
+        </p>
+      )
+    }
+    <header>
+      <h1>{post.data.title}</h1>
+      <p class="lede">{post.data.description}</p>
+      <div class="post-meta">
+        <time datetime={isoDate(post.data.date)}>{formatDate(post.data.date)}</time>
+        <TagList tags={post.data.tags} />
+      </div>
+    </header>
+    <div class="prose">
+      <Content />
+    </div>
+  </article>
+  <p class="more"><a href="/archive/">More in the archive</a></p>
+</Base>

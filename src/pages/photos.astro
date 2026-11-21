@@ -1,0 +1,37 @@
+---
+import Base from '../layouts/Base.astro';
+import River from '../components/River.astro';
+import { photos } from '../data/photos';
+---
+
+<Base wide title="Photos" description="A shelf of pictures for William Kearns's archive.">
+  <header class="page-head">
+    <p class="kicker">Photos</p>
+    <h1>Pinned up</h1>
+    <p class="lede">
+      A shelf for pictures. Everything here is a drawing standing in until a real photo takes its place.
+    </p>
+  </header>
+  <River />
+  {
+    photos.length === 0 ? (
+      <p class="empty">
+        The shelf is empty. Drop an image in <code>public/photos</code> and list it in
+        <code>src/data/photos.ts</code>.
+      </p>
+    ) : (
+      <ul class="photo-grid">
+        {photos.map((photo) => (
+          <li>
+            <figure class="polaroid">
+              <span class="tape" aria-hidden="true"></span>
+              {photo.placeholder && <span class="mini-label polaroid-flag">Placeholder</span>}
+              <img src={photo.src} alt={photo.alt} width="800" height="1000" loading="lazy" />
+              <figcaption>{photo.caption}</figcaption>
+            </figure>
+          </li>
+        ))}
+      </ul>
+    )
+  }
+</Base>

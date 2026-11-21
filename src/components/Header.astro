@@ -1,0 +1,36 @@
+---
+import ThemeToggle from './ThemeToggle.astro';
+
+const path = Astro.url.pathname;
+const writingOn = path.startsWith('/archive') || path.startsWith('/posts') || path.startsWith('/tags');
+
+const links = [
+  { href: '/archive/', label: 'Writing', on: writingOn },
+  { href: '/projects/', label: 'Projects', on: path.startsWith('/projects') },
+  { href: '/photos/', label: 'Photos', on: path.startsWith('/photos') },
+  { href: '/now/', label: 'Now', on: path.startsWith('/now') },
+  { href: '/about/', label: 'About', on: path.startsWith('/about') },
+];
+---
+
+<header class="site-header">
+  <div class="shell wide header-bar">
+    <a class="wordmark" href="/" aria-current={path === '/' ? 'page' : undefined}>
+      <span class="ml-mark" aria-hidden="true">M</span>
+      <span class="sign-name">William Kearns</span>
+      <span class="ml-mark" aria-hidden="true">L</span>
+    </a>
+    <div class="nav-cluster">
+      <nav class="nav" aria-label="Primary">
+        {
+          links.map((link) => (
+            <a href={link.href} aria-current={link.on ? 'page' : undefined}>
+              {link.label}
+            </a>
+          ))
+        }
+      </nav>
+      <ThemeToggle />
+    </div>
+  </div>
+</header>

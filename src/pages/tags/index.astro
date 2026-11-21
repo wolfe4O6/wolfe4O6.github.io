@@ -1,0 +1,34 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getPosts } from '../../lib/posts';
+import { collectTags } from '../../lib/tags';
+
+const tags = collectTags(await getPosts());
+---
+
+<Base title="Tags" description="Tags across William Kearns's archive.">
+  <header class="page-head">
+    <p class="kicker">Tags</p>
+    <h1>Filed under</h1>
+    <p class="lede">Every tag currently in use.</p>
+  </header>
+
+  {
+    tags.length === 0 ? (
+      <p class="empty">No tags yet. Add a few in a post's frontmatter when you are ready.</p>
+    ) : (
+      <ul class="tag-index">
+        {tags.map((tag) => (
+          <li>
+            <a href={`/tags/${tag.slug}/`}>
+              {tag.label}
+              <span>
+                {tag.count} {tag.count === 1 ? 'post' : 'posts'}
+              </span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    )
+  }
+</Base>
