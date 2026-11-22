@@ -1,27 +1,36 @@
 ---
-import { Image } from 'astro:assets';
+import { Image, getImage } from 'astro:assets';
 import sentinel from '../assets/missoula/sentinel-m.webp';
+import sentinelPhone from '../assets/missoula/sentinel-m-phone.webp';
 import jumbo from '../assets/missoula/jumbo-l.webp';
+import jumboPhone from '../assets/missoula/jumbo-l-phone.webp';
 import { heroPhotos } from '../data/hero-photos';
 import { site } from '../site';
 
 const images = { m: sentinel, l: jumbo };
+const phone = {
+  m: await getImage({ src: sentinelPhone, format: 'webp', width: 640 }),
+  l: await getImage({ src: jumboPhone, format: 'webp', width: 620 }),
+};
 ---
 
 <section class="photo-hero" data-grade="day" data-slide="m" aria-label="Missoula, the M and the L">
   <div class="hero-slides">
     {
       heroPhotos.map((photo, index) => (
-        <Image
-          src={images[photo.id]}
-          alt={photo.alt}
-          widths={[640, 1100, 1600]}
-          sizes="100vw"
-          class:list={['hero-photo', index === 0 && 'is-on', `hero-${photo.id}`]}
-          loading={index === 0 ? 'eager' : 'eager'}
-          fetchpriority={index === 0 ? 'high' : 'low'}
-          data-slide={photo.id}
-        />
+        <picture>
+          <source media="(max-width: 759px)" srcset={phone[photo.id].src} type="image/webp" />
+          <Image
+            src={images[photo.id]}
+            alt={photo.alt}
+            widths={[640, 1100, 1600]}
+            sizes="100vw"
+            class:list={['hero-photo', index === 0 && 'is-on', `hero-${photo.id}`]}
+            loading="eager"
+            fetchpriority={index === 0 ? 'high' : 'low'}
+            data-slide={photo.id}
+          />
+        </picture>
       ))
     }
     {

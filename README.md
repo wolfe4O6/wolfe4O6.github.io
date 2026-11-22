@@ -2,7 +2,7 @@
 
 A small personal site and digital archive: a calm place to check in, and a shelf for notes over time. It is an [Astro](https://astro.build) site, published at [wolfe4O6.github.io](https://wolfe4O6.github.io).
 
-The home page opens on two photographs of Missoula: the M on Mount Sentinel, and the L on Mount Jumbo. They crossfade. A small control softens the picture toward night. The weather chip is the current Missoula reading from Open-Meteo.
+The home page opens on two photographs of Missoula: the M on Mount Sentinel, and the L on Mount Jumbo. They crossfade. A small control softens the picture toward night. The weather chip is the current Missoula reading from Open-Meteo. Phones use a taller crop of the same two photographs so each letter stays in the frame.
 
 Photo credits:
 

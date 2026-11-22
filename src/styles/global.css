@@ -1841,6 +1841,203 @@ button.stamp {
   }
 }
 
+/* Phones only. Desktop (760px and up, and taller than a landscape phone) is unchanged. */
+@media (max-width: 759px) {
+  .hero-m,
+  .hero-l {
+    object-position: center center;
+  }
+
+  .photo-hero {
+    min-height: calc(100svh - 7.1rem);
+    min-height: calc(100dvh - 7.1rem);
+  }
+
+  .hero-copy {
+    left: 0.9rem;
+    right: 0.9rem;
+    bottom: 0.75rem;
+    max-width: none;
+  }
+
+  .hero-copy h1 {
+    font-size: clamp(2.35rem, 12vw, 3.15rem);
+  }
+
+  .hero-copy .lede {
+    margin-top: 0.4rem;
+    font-size: 1.02rem;
+  }
+
+  .hero-credits {
+    margin-top: 0.55rem;
+    font-size: 0.68rem;
+  }
+
+  .grade-toggle,
+  .hero-weather {
+    top: 0.7rem;
+    min-height: 44px;
+  }
+
+  .grade-toggle {
+    left: 0.7rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    padding: 0.4rem 0.9rem;
+  }
+
+  .hero-weather {
+    left: 5.6rem;
+    right: 0.7rem;
+    max-width: none;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.78rem;
+  }
+
+  .photo-hero[data-slide='m'] .pin-m,
+  .photo-hero[data-slide='l'] .pin-l {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0.35rem 0.8rem;
+  }
+
+  .pin-m {
+    left: 40% !important;
+    top: 23% !important;
+  }
+
+  .pin-l {
+    left: 50% !important;
+    top: 33% !important;
+  }
+
+  .shell,
+  .shell.wide {
+    width: min(42rem, calc(100% - 1.5rem));
+  }
+
+  .home-split,
+  .project-grid,
+  .photo-grid,
+  .post-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .page-head h1,
+  .post h1 {
+    font-size: clamp(2rem, 10vw, 2.7rem);
+  }
+
+  .lede {
+    font-size: 1.08rem;
+  }
+
+  .listen-item {
+    grid-template-columns: 2.6rem minmax(0, 1fr);
+    padding: 0.7rem 0.15rem;
+  }
+
+  .disc {
+    width: 2.6rem;
+    height: 2.6rem;
+  }
+
+  .spotify {
+    height: 152px;
+    max-width: 100%;
+  }
+
+  .polaroid img,
+  .prose img {
+    max-width: 100%;
+  }
+
+  .archive-row,
+  .facts div {
+    grid-template-columns: 4.2rem minmax(0, 1fr);
+    gap: 0.35rem 0.7rem;
+  }
+
+  .prose pre {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 759px), (max-height: 520px) and (max-width: 960px) {
+  .site-header .header-bar {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6rem;
+  }
+
+  .nav-cluster {
+    width: auto;
+    margin-left: auto;
+    justify-content: flex-end;
+  }
+
+  .wordmark {
+    min-width: 0;
+  }
+
+  .sign-name {
+    font-size: 1.05rem;
+  }
+
+  .theme-toggle {
+    width: 44px;
+    height: 44px;
+  }
+
+  .nav {
+    position: fixed;
+    z-index: 40;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    gap: 0;
+    margin: 0;
+    padding: 0.15rem 0.3rem calc(0.15rem + env(safe-area-inset-bottom));
+    background: color-mix(in srgb, var(--bg) 94%, white);
+    border-top: 1px solid var(--line);
+    backdrop-filter: blur(12px);
+  }
+
+  .nav a {
+    flex: 1 1 0;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.25rem 0.1rem;
+    font-size: 0.78rem;
+    text-align: center;
+  }
+
+  .nav a:hover {
+    transform: none;
+  }
+
+  body {
+    padding-bottom: calc(3.15rem + env(safe-area-inset-bottom));
+  }
+}
+
 @media print {
   .skip-link,
   .theme-toggle,
