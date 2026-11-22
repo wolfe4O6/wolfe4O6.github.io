@@ -1913,13 +1913,13 @@ button.stamp {
   }
 
   .pin-m {
-    left: 40% !important;
-    top: 23% !important;
+    left: 36% !important;
+    top: 25% !important;
   }
 
   .pin-l {
-    left: 50% !important;
-    top: 33% !important;
+    left: 52% !important;
+    top: 37% !important;
   }
 
   .shell,
@@ -1975,6 +1975,12 @@ button.stamp {
 }
 
 @media (max-width: 759px), (max-height: 520px) and (max-width: 960px) {
+  /* The header blur would trap a fixed menu inside the bar and cover the name. */
+  .site-header {
+    backdrop-filter: none;
+    background: var(--bg);
+  }
+
   .site-header .header-bar {
     flex-direction: row;
     align-items: center;
@@ -2035,6 +2041,58 @@ button.stamp {
 
   body {
     padding-bottom: calc(3.15rem + env(safe-area-inset-bottom));
+  }
+}
+
+@media (max-height: 520px) and (min-width: 760px) and (max-width: 960px) {
+  .photo-hero {
+    min-height: calc(100svh - 7.4rem);
+    min-height: calc(100dvh - 7.4rem);
+  }
+
+  .hero-copy {
+    left: 0.9rem;
+    right: 0.9rem;
+    bottom: 0.4rem;
+  }
+
+  .hero-copy h1 {
+    font-size: 2rem;
+  }
+
+  .hero-copy .lede {
+    margin-top: 0.2rem;
+    font-size: 0.95rem;
+  }
+
+  .hero-credits {
+    margin-top: 0.3rem;
+    font-size: 0.64rem;
+  }
+
+  .grade-toggle,
+  .hero-weather {
+    top: 0.45rem;
+  }
+
+  .photo-hero[data-slide='m'] .pin-m,
+  .photo-hero[data-slide='l'] .pin-l {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .pin-m {
+    left: 23% !important;
+    top: 40% !important;
+  }
+
+  .pin-l {
+    left: 57% !important;
+    top: 47% !important;
   }
 }
 
