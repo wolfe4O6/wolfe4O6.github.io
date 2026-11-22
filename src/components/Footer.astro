@@ -1,0 +1,28 @@
+---
+import { site } from '../site';
+---
+
+<footer class="site-footer">
+  <div class="shell wide">
+    <div class="postcard">
+      <div class="postcard-body">
+        <p class="postcard-from">From Missoula, MT</p>
+        <p class="postcard-name">{site.name}</p>
+        <p class="postcard-line">{site.description}</p>
+        <p class="footer-links">
+          <a rel="me" href={site.github}>GitHub</a>
+          <a href="/projects/">Projects</a>
+          <a href="/photos/">Photos</a>
+          <a href="/archive/">Writing</a>
+          <a href="/rss.xml">RSS</a>
+        </p>
+        <p class="colophon">A personal archive. Set in Fraunces and Literata.</p>
+      </div>
+      <p class="stamp" aria-hidden="true">
+        <span class="stamp-m">M</span>
+        <span>MISSOULA</span>
+        <span>MT</span>
+      </p>
+    </div>
+  </div>
+</footer>

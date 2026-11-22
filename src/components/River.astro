@@ -1,0 +1,26 @@
+---
+interface Props {
+  label?: string;
+}
+
+const { label } = Astro.props;
+---
+
+<div class="river-wrap">
+  {label && <p class="river-label">{label}</p>}
+  <svg class="river" viewBox="0 0 640 28" preserveAspectRatio="none" aria-hidden="true">
+    <path
+      d="M0 16 C 40 8, 80 22, 130 14 S 210 6, 270 16 360 26, 430 14 530 6, 640 16"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.8"
+      stroke-linecap="round"></path>
+    <path
+      d="M0 22 C 70 18, 120 26, 190 20 S 300 14, 380 22 500 28, 580 20 620 18, 640 22"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1"
+      opacity="0.5"
+      stroke-linecap="round"></path>
+  </svg>
+</div>

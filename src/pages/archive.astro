@@ -1,0 +1,37 @@
+---
+import Base from '../layouts/Base.astro';
+import ArchiveList from '../components/ArchiveList.astro';
+import { getPosts, groupByYear } from '../lib/posts';
+
+const posts = await getPosts();
+const groups = groupByYear(posts);
+const countLabel = posts.length === 1 ? '1 note' : `${posts.length} notes`;
+---
+
+<Base title="Archive" description="Every note filed in William Kearns's archive, grouped by year.">
+  <header class="page-head">
+    <p class="kicker">Archive</p>
+    <h1>Everything kept</h1>
+    <p class="lede">Notes gathered by year, so it's easy to look back.</p>
+    {posts.length > 0 && <p class="count">{countLabel}</p>}
+  </header>
+
+  {
+    groups.length === 0 ? (
+      <p class="empty">
+        Nothing filed yet. Add a Markdown file to <code>src/content/posts</code>.
+      </p>
+    ) : (
+      groups.map(([year, yearPosts]) => (
+        <section class="archive-group" aria-labelledby={`year-${year}`}>
+          <h2 id={`year-${year}`} class="archive-year">
+            {year}
+          </h2>
+          <ArchiveList posts={yearPosts} />
+        </section>
+      ))
+    )
+  }
+
+  <p class="more"><a href="/tags/">Browse by tag</a></p>
+</Base>
