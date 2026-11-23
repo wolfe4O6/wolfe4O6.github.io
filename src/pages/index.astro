@@ -1,97 +1,124 @@
----
-import { getEntry, render } from 'astro:content';
-import Base from '../layouts/Base.astro';
-import PhotoHero from '../components/PhotoHero.astro';
-import PostList from '../components/PostList.astro';
-import Listening from '../components/Listening.astro';
-import ProjectCard from '../components/ProjectCard.astro';
-import River from '../components/River.astro';
-import { site } from '../site';
-import { getPosts } from '../lib/posts';
-import { formatDate, isoDate } from '../lib/dates';
-import { featuredProjects } from '../data/projects';
-
-const posts = (await getPosts()).slice(0, 3);
-const featured = featuredProjects();
-const now = await getEntry('pages', 'now');
-if (!now) {
-  throw new Error('Missing src/content/pages/now.md');
-}
-const { Content } = await render(now);
-
-const person = {
-  '@context': 'https://schema.org',
-  '@type': 'Person',
-  name: site.name,
-  description: site.description,
-  url: site.url,
-  homeLocation: {
-    '@type': 'Place',
-    name: site.location,
-  },
-  sameAs: [site.github],
-};
----
-
-<Base wide>
-  <Fragment slot="head">
-    <script type="application/ld+json" set:html={JSON.stringify(person)} />
-  </Fragment>
-
-  <PhotoHero />
-
-  <div class="home-split">
-    <section class="notecard now-card" aria-labelledby="now-heading">
-      <span class="tape" aria-hidden="true"></span>
-      <div class="section-head">
-        <h2 id="now-heading">Now</h2>
-        <a href="/now/">The full page</a>
-      </div>
-      {
-        now.data.updated && (
-          <p class="updated">
-            Updated <time datetime={isoDate(now.data.updated)}>{formatDate(now.data.updated)}</time>
-          </p>
-        )
-      }
-      <div class="prose">
-        <Content />
-      </div>
-    </section>
-    <Listening compact />
-  </div>
-
-  {
-    featured.length > 0 && (
-      <section class="section" aria-labelledby="projects-heading">
-        <div class="section-head">
-          <h2 id="projects-heading">On the workbench</h2>
-          <a href="/projects/">All projects</a>
-        </div>
-        <div class="project-grid">
-          {featured.map((project, index) => (
-            <ProjectCard project={project} index={index} />
-          ))}
-        </div>
-      </section>
-    )
-  }
-
-  <River />
-
-  <section class="section" aria-labelledby="recent-heading">
-    <div class="section-head">
-      <h2 id="recent-heading">Recent</h2>
-      <a href="/archive/">All posts</a>
-    </div>
-    {
-      posts.length === 0 ? (
-        <p class="empty">
-          Nothing filed yet. A new note is a Markdown file in <code>src/content/posts</code>.
-        </p>
-      ) : (
-        <PostList posts={posts} variant="cards" />
-      )
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#edf2e8">
+  <meta name="description" content="William Kearns’s personal website in Missoula, Montana.">
+  <title>William Kearns · Missoula, Montana</title>
+  <style is:global>
+    :root { color-scheme: light; background: #edf2e8; color: #1b392d; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font: 1rem/1.6 system-ui, sans-serif; }
+    main { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+    .copy { padding: clamp(4rem, 12vh, 8rem) clamp(1.5rem, 6vw, 5.5rem) 4rem; }
+    .greeting { margin: 0 0 1rem; font-size: clamp(1.1rem, 2vw, 1.5rem); }
+    h1 {
+      margin: 0; font: 500 clamp(3.6rem, 10vw, 8.25rem)/.98 Georgia, serif;
+      letter-spacing: -.065em; text-wrap: balance;
     }
-  </section>
-</Base>
+    h1 span { display: block; }
+    .about { max-width: 39rem; margin-top: clamp(2.5rem, 5vw, 4rem); }
+    p { margin: 1.25rem 0 0; font-size: clamp(1.05rem, 1.6vw, 1.23rem); }
+    .intro {
+      margin: 0 0 2rem; font: 400 clamp(1.5rem, 2.5vw, 2rem)/1.35 Georgia, serif;
+      letter-spacing: -.02em;
+    }
+    .photos {
+      --photo-gutter: clamp(1rem, 2.5vw, 3rem);
+      position: sticky; top: 0; align-self: start; min-width: 0;
+      height: 100vh; height: 100svh; padding-right: var(--photo-gutter);
+    }
+    .photo-scroll {
+      height: 100%; overflow-y: auto;
+      -webkit-mask-image: linear-gradient(transparent, black 10%, black 90%, transparent);
+      mask-image: linear-gradient(transparent, black 10%, black 90%, transparent);
+    }
+    .photo-scroll:focus-visible { outline: 2px solid #496653; outline-offset: -3px; }
+    .photo-group { display: grid; gap: 1.25rem; padding-bottom: 1.25rem; }
+    .photo-scroll img { display: block; width: 100%; height: auto; border-radius: .75rem; }
+    .photos.is-ready .photo-scroll { overflow: hidden; }
+    .photos.is-ready .photo-track { animation: photo-drift 125s linear infinite; }
+    .photos:hover .photo-track,
+    .photos:focus-within .photo-track { animation-play-state: paused; }
+    .photos::before, .photos::after {
+      content: ""; position: absolute; z-index: 1; pointer-events: none;
+      left: 0; right: var(--photo-gutter); height: clamp(4rem, 10vh, 7rem);
+      -webkit-backdrop-filter: blur(7px); backdrop-filter: blur(7px);
+    }
+    .photos::before {
+      top: 0; background: linear-gradient(#edf2e8, transparent);
+      -webkit-mask-image: linear-gradient(black, transparent);
+      mask-image: linear-gradient(black, transparent);
+    }
+    .photos::after {
+      bottom: 0; background: linear-gradient(transparent, #edf2e8);
+      -webkit-mask-image: linear-gradient(transparent, black);
+      mask-image: linear-gradient(transparent, black);
+    }
+    @keyframes photo-drift { to { transform: translateY(-50%); } }
+    @media (prefers-reduced-motion: reduce) {
+      .photos.is-ready .photo-track { animation: none; }
+      .photos.is-ready .photo-scroll { overflow-y: auto; }
+      .photo-group[aria-hidden="true"] { display: none; }
+    }
+    @media (max-width: 46rem) {
+      main { display: flex; flex-direction: column; }
+      .copy { display: contents; }
+      .identity { order: 0; padding: 3rem 1.5rem 2rem; }
+      .photos {
+        --photo-gutter: 0px;
+        order: 1; position: relative; height: min(70svh, 35rem);
+        width: 100%; padding: 0 1.5rem;
+      }
+      .photos::before, .photos::after { left: 1.5rem; right: 1.5rem; }
+      .about { order: 2; margin: 2rem 1.5rem 3rem; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="copy">
+      <div class="identity">
+        <p class="greeting">Hello, I’m</p>
+        <h1><span>William</span> <span>Kearns</span></h1>
+      </div>
+      <div class="about">
+        <p class="intro">Hi, I’m William. I live in Missoula, Montana. I like long days in the woods and late nights making things with friends.</p>
+        <p>I’m into backpacking, camping, and traveling. Back home, I like taking old computers apart and figuring out how to fix them. I care about the right to repair and being able to make things yourself.</p>
+        <p>There’s usually music in the mix, too. Guitar and DJ sets. Sometimes the best plan is just getting friends together for gaming.</p>
+      </div>
+    </div>
+    <div class="photos">
+      <div class="photo-scroll" role="region" aria-label="Personal photos. Hover or focus to pause." tabindex="0">
+        <div class="photo-track">
+          <div class="photo-group">
+            <img src="/images/valley.jpeg" width="2364" height="1330" fetchpriority="high"
+            alt="A wide view across the valley, with green hills, a town, and mountains beneath a cloud-filled sky.">
+            <img src="/images/forest-hills.jpeg" width="1182" height="664"
+            alt="Clouds drift over dark green forested hills and a golden meadow.">
+            <img src="/images/band.jpeg" width="2364" height="1330"
+            alt="A view from beside a marching band, with instruments in front of crowded stadium stands.">
+            <img src="/images/tower.jpeg" width="2364" height="1330"
+            alt="A communications tower rises against a pastel evening sky and a wooded ridge.">
+            <img src="/images/sunset.jpeg" width="2364" height="1330"
+            alt="Golden sunlight falls across clouds, trees, and the mountain skyline.">
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  <script is:inline>
+    const photos = document.querySelector('.photos');
+    const track = photos.querySelector('.photo-track');
+    const group = track.querySelector('.photo-group');
+
+    // Equal-height copies make the loop meet at the same photo and spacing.
+    const copy = group.cloneNode(true);
+    copy.setAttribute('aria-hidden', 'true');
+    copy.querySelectorAll('img').forEach(image => { image.alt = ''; });
+    track.append(copy);
+    photos.classList.add('is-ready');
+  </script>
+</body>
+</html>
