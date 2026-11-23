@@ -1,0 +1,136 @@
+---
+import '@fontsource/caveat/latin-500.css';
+import '../styles/postcard.css';
+import { site } from '../site';
+import { projects, projectUrl } from '../data/projects';
+import { heroPhotos } from '../data/hero-photos';
+import sentinel from '../assets/missoula/sentinel-m.webp';
+import jumbo from '../assets/missoula/jumbo-l.webp';
+
+const stamps = [
+  'AI tools',
+  '3D printing',
+  'Retro gaming',
+  'Building and tinkering',
+  'DJing and music',
+];
+---
+
+<div class="desk">
+  <nav class="card-nav" aria-label="Postcard">
+    <a href="/">{site.name}</a>
+    <a href="/projects/">Projects</a>
+  </nav>
+
+  <article class="postcard" id="postcard" data-card>
+    <div class="face front is-shown" data-face="front">
+      <p class="greet">Greetings from</p>
+      <h1
+        class="word"
+        style={`--photo-m:url(${sentinel.src});--photo-l:url(${jumbo.src})`}
+      >
+        Missoula
+      </h1>
+      <svg class="scene" viewBox="0 0 640 118" role="img" aria-label="Mountains, snow, a trail, and the Clark Fork River.">
+        <path d="M0 62 L70 22 L110 46 L170 10 L230 50 L300 16 L360 44 L430 8 L500 42 L560 18 L640 54 L640 78 L0 78 Z" fill="#6e8a74" />
+        <path d="M150 22 L170 10 L190 26 L176 24 L170 16 L164 24 Z" fill="#f7f1e6" />
+        <path d="M410 18 L430 8 L450 22 L436 20 L430 14 L424 20 Z" fill="#f7f1e6" />
+        <path d="M16 86 C 120 78, 180 96, 280 84 S 460 74, 624 90" fill="none" stroke="#2f6f78" stroke-width="3" />
+        <path d="M36 70 C 140 64, 220 76, 340 66 S 520 58, 610 72" fill="none" stroke="#f4efe4" stroke-width="1.6" stroke-dasharray="5 6" />
+        <text x="16" y="110">Clark Fork</text>
+        <text x="520" y="110">trails</text>
+      </svg>
+
+      <div class="front-tools">
+        <button class="turn" type="button" data-turn aria-pressed="false">
+          Turn the card
+        </button>
+        <svg class="postmark" viewBox="0 0 120 120" aria-hidden="true">
+          <circle cx="60" cy="60" r="46" fill="none" stroke="#8d2b24" stroke-width="2" />
+          <circle cx="60" cy="60" r="38" fill="none" stroke="#8d2b24" stroke-width="1" />
+          <text x="60" y="52" text-anchor="middle" fill="#8d2b24" font-size="13" font-family="Fraunces, serif">MISSOULA</text>
+          <text x="60" y="70" text-anchor="middle" fill="#8d2b24" font-size="12" font-family="Fraunces, serif">MONT.</text>
+          <path d="M8 78 C 28 70, 40 86, 60 78 S 96 70, 116 80" fill="none" stroke="#8d2b24" stroke-width="1.4" />
+          <path d="M10 90 C 30 82, 44 98, 66 90 S 98 82, 114 92" fill="none" stroke="#8d2b24" stroke-width="1.4" />
+        </svg>
+      </div>
+    </div>
+
+    <div class="face back" data-face="back" hidden>
+      <div class="note">
+        <p>{site.name}</p>
+        <p>{site.location}</p>
+        <p>{site.description}</p>
+        <p>AI tools. 3D printing. Retro gaming. Building and tinkering. DJing and music.</p>
+        <p>
+          <button class="turn" type="button" data-turn>See the picture side</button>
+        </p>
+      </div>
+      <div>
+        <ul class="stamps">
+          {stamps.map((stamp) => <li>{stamp}</li>)}
+        </ul>
+        <p class="address">
+          {site.name}<br />
+          {site.location}<br />
+          <a href={site.github}>GitHub · {site.handle}</a>
+        </p>
+      </div>
+      <section class="enclosed">
+        <h2>Projects</h2>
+        <ul class="slips">
+          {
+            projects.map((project) => (
+              <li>
+                <a href={projectUrl(project.repo)}>
+                  <strong>{project.name}</strong>
+                  <span>{project.description}</span>
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+        <p><a href="/projects/">All on one sheet</a></p>
+      </section>
+      <p class="credits">
+        The M on Mount Sentinel. {heroPhotos[0].credit.photographer},{' '}
+        <a href={heroPhotos[0].credit.licenseUrl}>{heroPhotos[0].credit.license}</a>,{' '}
+        <a href={heroPhotos[0].credit.sourceUrl}>Wikimedia Commons</a>.
+        The L on Mount Jumbo. {heroPhotos[1].credit.photographer},{' '}
+        <a href={heroPhotos[1].credit.licenseUrl}>{heroPhotos[1].credit.license}</a>,{' '}
+        <a href={heroPhotos[1].credit.sourceUrl}>Wikimedia Commons</a>.
+        Mountains, snow, the trail, and the Clark Fork are drawn for this card.
+      </p>
+    </div>
+  </article>
+</div>
+
+<script>
+  const card = document.querySelector<HTMLElement>('[data-card]');
+  if (card && card.dataset.ready !== '1') {
+    card.dataset.ready = '1';
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduced) card.classList.add('is-instant');
+
+    const show = (face: 'front' | 'back') => {
+      card.querySelectorAll<HTMLElement>('[data-face]').forEach((panel) => {
+        const on = panel.dataset.face === face;
+        panel.classList.toggle('is-shown', on);
+        panel.hidden = !on;
+      });
+      card.querySelectorAll<HTMLButtonElement>('[data-turn]').forEach((button) => {
+        const flipped = face === 'back';
+        button.setAttribute('aria-pressed', flipped ? 'true' : 'false');
+      });
+    };
+
+    card.querySelectorAll('[data-turn]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const back = card.querySelector<HTMLElement>('[data-face="back"]');
+        show(back?.hidden === false ? 'front' : 'back');
+      });
+    });
+
+    window.setTimeout(() => card.classList.add('is-stamped'), reduced ? 0 : 280);
+  }
+</script>

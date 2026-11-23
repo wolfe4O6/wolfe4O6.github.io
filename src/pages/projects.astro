@@ -1,28 +1,30 @@
 ---
 import Base from '../layouts/Base.astro';
-import ProjectCard from '../components/ProjectCard.astro';
-import River from '../components/River.astro';
-import { projects } from '../data/projects';
+import '../styles/postcard.css';
+import { projects, projectUrl } from '../data/projects';
 ---
 
-<Base wide title="Projects" description="Public projects from William Kearns on GitHub.">
-  <header class="page-head">
-    <p class="kicker">Projects</p>
-    <h1>On the workbench</h1>
-    <p class="lede">Public repositories from GitHub. The descriptions are the ones on each repo.</p>
-  </header>
-  <River />
-  {
-    projects.length === 0 ? (
-      <p class="empty">
-        Nothing pinned yet. Add a block to <code>src/data/projects.ts</code>.
-      </p>
-    ) : (
-      <div class="project-grid">
-        {projects.map((project, index) => (
-          <ProjectCard project={project} index={index} />
-        ))}
-      </div>
-    )
-  }
+<Base bare title="Projects" description="Public projects from William Kearns on GitHub.">
+  <div class="desk">
+    <nav class="card-nav" aria-label="Postcard">
+      <a href="/">The card</a>
+      <a href="/projects/">Projects</a>
+    </nav>
+    <div class="slip-page">
+      <h1>Projects</h1>
+      <p class="lede">Public repositories from GitHub. The descriptions are the ones on each repo.</p>
+      <ul class="mail">
+        {
+          projects.map((project) => (
+            <li>
+              <a href={projectUrl(project.repo)}>
+                <strong>{project.name}</strong>
+                <span>{project.description}</span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </div>
 </Base>
