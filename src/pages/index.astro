@@ -39,6 +39,19 @@
     .photo-scroll:focus-visible { outline: 2px solid #496653; outline-offset: -3px; }
     .photo-group { display: grid; gap: 1.25rem; padding-bottom: 1.25rem; }
     .photo-scroll img { display: block; width: 100%; height: auto; border-radius: .75rem; }
+    .photo {
+      position: relative; display: block; width: 100%; padding: 0; border: 0;
+      border-radius: .75rem; background: transparent; color: white;
+      text-align: left; font: inherit; cursor: pointer; overflow: hidden;
+    }
+    .photo:focus-visible { outline: 3px solid #1b392d; outline-offset: -3px; }
+    .photo-caption {
+      position: absolute; inset: auto 0 0; padding: 2.5rem 1.25rem 1.25rem;
+      background: linear-gradient(transparent, rgba(12, 35, 25, .94));
+      font-size: clamp(.95rem, 1.4vw, 1.15rem); line-height: 1.4;
+    }
+    .photo-caption[hidden] { display: none; }
+    .photo-caption time { display: block; margin-top: .4rem; font-size: .8rem; opacity: .85; }
     .photos.is-ready .photo-scroll { overflow: hidden; touch-action: pan-x; }
     .photos.is-ready .photo-track { will-change: transform; }
     .photos::before, .photos::after {
@@ -90,19 +103,49 @@
       </div>
     </div>
     <div class="photos">
-      <div class="photo-scroll" role="region" aria-label="Personal photos. Scroll or drag to browse. Focus to pause automatic motion." tabindex="0">
+      <div class="photo-scroll" role="region" aria-label="Personal photos. Scroll or drag to browse. Click a photo for its caption." tabindex="0">
         <div class="photo-track">
           <div class="photo-group">
-            <img src="/images/valley.jpeg" width="2364" height="1330" fetchpriority="high"
+            <button class="photo" type="button" aria-expanded="false">
+              <img src="/images/valley.jpeg" width="2364" height="1330" fetchpriority="high"
             alt="A wide view across the valley, with green hills, a town, and mountains beneath a cloud-filled sky.">
-            <img src="/images/forest-hills.jpeg" width="1182" height="664"
+              <span class="photo-caption" hidden>
+                <span>Looking out across the valley.</span>
+                <time datetime="2026-05-06">May 6, 2026</time>
+              </span>
+            </button>
+            <button class="photo" type="button" aria-expanded="false">
+              <img src="/images/forest-hills.jpeg" width="1182" height="664"
             alt="Clouds drift over dark green forested hills and a golden meadow.">
-            <img src="/images/band.jpeg" width="2364" height="1330"
+              <span class="photo-caption" hidden>
+                <span>Low clouds over the forest.</span>
+                <time datetime="2026-10-10">October 10, 2026</time>
+              </span>
+            </button>
+            <button class="photo" type="button" aria-expanded="false">
+              <img src="/images/band.jpeg" width="2364" height="1330"
             alt="A view from beside a marching band, with instruments in front of crowded stadium stands.">
-            <img src="/images/tower.jpeg" width="2364" height="1330"
+              <span class="photo-caption" hidden>
+                <span>From beside the band.</span>
+                <time datetime="2026-09-11">September 11, 2026</time>
+              </span>
+            </button>
+            <button class="photo" type="button" aria-expanded="false">
+              <img src="/images/tower.jpeg" width="2364" height="1330"
             alt="A communications tower rises against a pastel evening sky and a wooded ridge.">
-            <img src="/images/sunset.jpeg" width="2364" height="1330"
+              <span class="photo-caption" hidden>
+                <span>A tower against the evening sky.</span>
+                <time datetime="2026-05-05">May 5, 2026</time>
+              </span>
+            </button>
+            <button class="photo" type="button" aria-expanded="false">
+              <img src="/images/sunset.jpeg" width="2364" height="1330"
             alt="Golden sunlight falls across clouds, trees, and the mountain skyline.">
+              <span class="photo-caption" hidden>
+                <span>Sunset over the hills.</span>
+                <time datetime="2026-04-15">April 15, 2026</time>
+              </span>
+            </button>
           </div>
         </div>
       </div>
@@ -120,10 +163,12 @@
     let lastFrame = 0;
     let focused = false;
     let drag = null;
+    let selectedPhoto = null;
+    let suppressClick = false;
 
     const copy = group.cloneNode(true);
     copy.setAttribute('aria-hidden', 'true');
-    copy.querySelectorAll('img').forEach(image => { image.alt = ''; });
+    copy.querySelectorAll('button').forEach(button => { button.tabIndex = -1; });
     track.append(copy);
 
     function renderPosition() {
@@ -146,15 +191,57 @@
       const distance = event.deltaY * unit;
       if (!distance) return;
       event.preventDefault();
+      closeCaption();
       position += distance * 0.5;
       extraSpeed = Math.max(-1800, Math.min(1800, extraSpeed + distance * 6));
       renderPosition();
     }, { passive: false });
 
-    viewport.addEventListener('focus', () => { focused = true; });
-    viewport.addEventListener('blur', () => { focused = false; });
+    function closeCaption() {
+      if (!selectedPhoto) return;
+      selectedPhoto.setAttribute('aria-expanded', 'false');
+      selectedPhoto.querySelector('.photo-caption').hidden = true;
+      selectedPhoto = null;
+    }
+
+    track.addEventListener('click', event => {
+      if (suppressClick) {
+        suppressClick = false;
+        return;
+      }
+      const button = event.target.closest('.photo');
+      if (!button) return;
+      const wasOpen = selectedPhoto === button;
+      closeCaption();
+      if (wasOpen) return;
+      selectedPhoto = button;
+      button.setAttribute('aria-expanded', 'true');
+      button.querySelector('.photo-caption').hidden = false;
+      extraSpeed = 0;
+    });
+    document.addEventListener('click', event => {
+      if (!event.target.closest('.photo')) closeCaption();
+    });
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape') closeCaption();
+    });
+
+    viewport.addEventListener('focusin', event => {
+      focused = event.target.matches(':focus-visible');
+      const button = event.target.closest('.photo');
+      if (!focused || !button || reducedMotion.matches) return;
+      viewport.scrollTop = 0;
+      const offset = button.getBoundingClientRect().top - viewport.getBoundingClientRect().top;
+      position = Math.max(0, position + offset - 24);
+      extraSpeed = 0;
+      renderPosition();
+    });
+    viewport.addEventListener('focusout', event => {
+      focused = viewport.contains(event.relatedTarget) &&
+        event.relatedTarget.matches(':focus-visible');
+    });
     viewport.addEventListener('keydown', event => {
-      if (reducedMotion.matches) return;
+      if (reducedMotion.matches || event.target.closest('.photo')) return;
       const steps = { ArrowDown: 80, ArrowUp: -80, PageDown: viewport.clientHeight * 0.8,
         PageUp: -viewport.clientHeight * 0.8, ' ': viewport.clientHeight * 0.8 };
       if (!(event.key in steps) || event.ctrlKey || event.altKey || event.metaKey) return;
@@ -165,13 +252,20 @@
     });
 
     viewport.addEventListener('pointerdown', event => {
+      suppressClick = false;
       if (reducedMotion.matches || event.pointerType === 'mouse' || !event.isPrimary) return;
-      viewport.setPointerCapture(event.pointerId);
-      drag = { id: event.pointerId, y: event.clientY, time: event.timeStamp };
+      drag = { id: event.pointerId, y: event.clientY, startY: event.clientY,
+        time: event.timeStamp, moving: false };
       extraSpeed = 0;
     });
     viewport.addEventListener('pointermove', event => {
       if (!drag || drag.id !== event.pointerId) return;
+      if (!drag.moving) {
+        if (Math.abs(drag.startY - event.clientY) < 6) return;
+        drag.moving = true;
+        closeCaption();
+        viewport.setPointerCapture(event.pointerId);
+      }
       const distance = drag.y - event.clientY;
       position += distance;
       extraSpeed = Math.max(-1800, Math.min(1800, distance * 1000 / Math.max(16, event.timeStamp - drag.time)));
@@ -179,7 +273,10 @@
       drag.time = event.timeStamp;
       renderPosition();
     });
-    viewport.addEventListener('pointerup', () => { drag = null; });
+    viewport.addEventListener('pointerup', () => {
+      suppressClick = Boolean(drag && drag.moving);
+      drag = null;
+    });
     viewport.addEventListener('pointercancel', () => { drag = null; extraSpeed = 0; });
 
     reducedMotion.addEventListener('change', () => {
@@ -192,7 +289,7 @@
     function animate(time) {
       const elapsed = lastFrame ? Math.min((time - lastFrame) / 1000, 0.05) : 0;
       lastFrame = time;
-      if (!reducedMotion.matches && !document.hidden && !drag) {
+      if (!reducedMotion.matches && !document.hidden && !drag && !selectedPhoto) {
         const automaticSpeed = focused ? 0 : loopHeight / 125;
         position += (automaticSpeed + extraSpeed) * elapsed;
         extraSpeed *= Math.exp(-2.5 * elapsed);
