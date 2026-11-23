@@ -24,7 +24,7 @@
       position: sticky; top: 0; z-index: 5; height: var(--bar-height);
       display: flex; align-items: center; justify-content: flex-end; gap: 1.5rem;
       padding: calc(.5rem + env(safe-area-inset-top)) clamp(1.5rem, 2.5vw, 3rem) .5rem;
-      border-bottom: 1px solid #c9d7c5; background: rgba(237, 242, 232, .9);
+      background: rgba(237, 242, 232, .9);
       -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
       font-size: .95rem;
     }
@@ -82,22 +82,45 @@
       -webkit-mask-image: linear-gradient(transparent, black);
       mask-image: linear-gradient(transparent, black);
     }
-    @media (prefers-reduced-motion: reduce) {
-      .photos.is-ready .photo-track { transform: none !important; will-change: auto; }
-      .photos.is-ready .photo-scroll { overflow-y: auto; touch-action: auto; }
-      .photo-group[aria-hidden="true"] { display: none; }
-    }
     @media (max-width: 46rem) {
       main { display: flex; flex-direction: column; }
       .copy { display: contents; }
       .identity { order: 0; padding: 2rem 1.5rem; }
       .photos {
         --photo-gutter: 0px;
-        order: 1; position: relative; top: 0; height: min(70svh, 35rem);
+        order: 1; position: relative; top: 0; height: auto;
         width: 100%; padding: 0 1.5rem;
       }
-      .photos::before, .photos::after { left: 1.5rem; right: 1.5rem; }
+      .photo-scroll {
+        height: auto; aspect-ratio: 2364 / 1330; overflow-x: auto; overflow-y: hidden;
+        -webkit-mask-image: linear-gradient(to right, transparent, black 6%, black 94%, transparent);
+        mask-image: linear-gradient(to right, transparent, black 6%, black 94%, transparent);
+      }
+      .photo-track { display: flex; width: max-content; }
+      .photo-group { display: flex; flex: none; gap: 1rem; padding: 0 1rem 0 0; }
+      .photo { flex: none; width: calc(100vw - 3rem); }
+      .photos.is-ready .photo-scroll { touch-action: pan-y; }
+      .photos::before, .photos::after {
+        top: 0; bottom: 0; width: clamp(1.5rem, 6vw, 3rem); height: 100%;
+      }
+      .photos::before {
+        left: 1.5rem; right: auto;
+        background: linear-gradient(to right, #edf2e8, transparent);
+        -webkit-mask-image: linear-gradient(to right, black, transparent);
+        mask-image: linear-gradient(to right, black, transparent);
+      }
+      .photos::after {
+        right: 1.5rem; left: auto;
+        background: linear-gradient(to right, transparent, #edf2e8);
+        -webkit-mask-image: linear-gradient(to right, transparent, black);
+        mask-image: linear-gradient(to right, transparent, black);
+      }
       .about { order: 2; margin: 2rem 1.5rem 3rem; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .photos.is-ready .photo-track { transform: none !important; will-change: auto; }
+      .photos.is-ready .photo-scroll { overflow: auto; touch-action: auto; }
+      .photo-group[aria-hidden="true"] { display: none; }
     }
   </style>
 </head>
@@ -173,7 +196,8 @@
     const track = photos.querySelector('.photo-track');
     const group = track.querySelector('.photo-group');
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-    let loopHeight = 0;
+    const mobileLayout = window.matchMedia('(max-width: 46rem)');
+    let loopSize = 0;
     let position = 0;
     let extraSpeed = 0;
     let lastFrame = 0;
@@ -188,23 +212,38 @@
     track.append(copy);
 
     function renderPosition() {
-      if (!loopHeight) return;
+      if (!loopSize) return;
       // Wrapping in either direction keeps the two identical groups seamless.
-      position = ((position % loopHeight) + loopHeight) % loopHeight;
-      track.style.transform = 'translateY(' + (-position) + 'px)';
+      position = ((position % loopSize) + loopSize) % loopSize;
+      const direction = mobileLayout.matches ? 'translateX' : 'translateY';
+      track.style.transform = direction + '(' + (-position) + 'px)';
     }
 
-    new ResizeObserver(() => {
-      const nextHeight = group.getBoundingClientRect().height;
-      if (loopHeight) position *= nextHeight / loopHeight;
-      loopHeight = nextHeight;
+    function updateLoopSize() {
+      const bounds = group.getBoundingClientRect();
+      const nextSize = mobileLayout.matches ? bounds.width : bounds.height;
+      if (loopSize) position *= nextSize / loopSize;
+      loopSize = nextSize;
       renderPosition();
-    }).observe(group);
+    }
+    new ResizeObserver(updateLoopSize).observe(group);
+
+    mobileLayout.addEventListener('change', () => {
+      closeCaption();
+      extraSpeed = 0;
+      drag = null;
+      viewport.scrollTop = 0;
+      viewport.scrollLeft = 0;
+      updateLoopSize();
+    });
 
     viewport.addEventListener('wheel', event => {
       if (reducedMotion.matches || event.ctrlKey || !event.cancelable) return;
-      const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? viewport.clientHeight : 1;
-      const distance = event.deltaY * unit;
+      const viewportSize = mobileLayout.matches ? viewport.clientWidth : viewport.clientHeight;
+      const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? viewportSize : 1;
+      const delta = mobileLayout.matches && Math.abs(event.deltaX) > Math.abs(event.deltaY)
+        ? event.deltaX : event.deltaY;
+      const distance = delta * unit;
       if (!distance) return;
       event.preventDefault();
       closeCaption();
@@ -247,7 +286,11 @@
       const button = event.target.closest('.photo');
       if (!focused || !button || reducedMotion.matches) return;
       viewport.scrollTop = 0;
-      const offset = button.getBoundingClientRect().top - viewport.getBoundingClientRect().top;
+      viewport.scrollLeft = 0;
+      const buttonBounds = button.getBoundingClientRect();
+      const viewportBounds = viewport.getBoundingClientRect();
+      const offset = mobileLayout.matches
+        ? buttonBounds.left - viewportBounds.left : buttonBounds.top - viewportBounds.top;
       position = Math.max(0, position + offset - 24);
       extraSpeed = 0;
       renderPosition();
@@ -258,8 +301,11 @@
     });
     viewport.addEventListener('keydown', event => {
       if (reducedMotion.matches || event.target.closest('.photo')) return;
-      const steps = { ArrowDown: 80, ArrowUp: -80, PageDown: viewport.clientHeight * 0.8,
-        PageUp: -viewport.clientHeight * 0.8, ' ': viewport.clientHeight * 0.8 };
+      const viewportSize = mobileLayout.matches ? viewport.clientWidth : viewport.clientHeight;
+      const steps = { PageDown: viewportSize * 0.8, PageUp: -viewportSize * 0.8,
+        ' ': viewportSize * 0.8 };
+      steps[mobileLayout.matches ? 'ArrowRight' : 'ArrowDown'] = 80;
+      steps[mobileLayout.matches ? 'ArrowLeft' : 'ArrowUp'] = -80;
       if (!(event.key in steps) || event.ctrlKey || event.altKey || event.metaKey) return;
       event.preventDefault();
       position += steps[event.key] * (event.key === ' ' && event.shiftKey ? -1 : 1);
@@ -270,22 +316,24 @@
     viewport.addEventListener('pointerdown', event => {
       suppressClick = false;
       if (reducedMotion.matches || event.pointerType === 'mouse' || !event.isPrimary) return;
-      drag = { id: event.pointerId, y: event.clientY, startY: event.clientY,
+      const coordinate = mobileLayout.matches ? event.clientX : event.clientY;
+      drag = { id: event.pointerId, coordinate, startCoordinate: coordinate,
         time: event.timeStamp, moving: false };
       extraSpeed = 0;
     });
     viewport.addEventListener('pointermove', event => {
       if (!drag || drag.id !== event.pointerId) return;
+      const coordinate = mobileLayout.matches ? event.clientX : event.clientY;
       if (!drag.moving) {
-        if (Math.abs(drag.startY - event.clientY) < 6) return;
+        if (Math.abs(drag.startCoordinate - coordinate) < 6) return;
         drag.moving = true;
         closeCaption();
         viewport.setPointerCapture(event.pointerId);
       }
-      const distance = drag.y - event.clientY;
+      const distance = drag.coordinate - coordinate;
       position += distance;
       extraSpeed = Math.max(-1800, Math.min(1800, distance * 1000 / Math.max(16, event.timeStamp - drag.time)));
-      drag.y = event.clientY;
+      drag.coordinate = coordinate;
       drag.time = event.timeStamp;
       renderPosition();
     });
@@ -299,6 +347,7 @@
       extraSpeed = 0;
       drag = null;
       viewport.scrollTop = 0;
+      viewport.scrollLeft = 0;
     });
     document.addEventListener('visibilitychange', () => { lastFrame = 0; });
 
@@ -306,7 +355,7 @@
       const elapsed = lastFrame ? Math.min((time - lastFrame) / 1000, 0.05) : 0;
       lastFrame = time;
       if (!reducedMotion.matches && !document.hidden && !drag && !selectedPhoto) {
-        const automaticSpeed = focused ? 0 : loopHeight / 125;
+        const automaticSpeed = focused ? 0 : loopSize / 125;
         position += (automaticSpeed + extraSpeed) * elapsed;
         extraSpeed *= Math.exp(-2.5 * elapsed);
         renderPosition();
