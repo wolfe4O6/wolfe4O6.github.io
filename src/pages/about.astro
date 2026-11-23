@@ -1,32 +1,8 @@
 ---
-import { getEntry, render } from 'astro:content';
 import Base from '../layouts/Base.astro';
-import { site } from '../site';
-
-const entry = await getEntry('pages', 'about');
-if (!entry) {
-  throw new Error('Missing src/content/pages/about.md');
-}
-const { Content } = await render(entry);
+import Postcard from '../components/Postcard.astro';
 ---
 
-<Base title="About" description={`${site.name}. ${site.description} ${site.location}.`}>
-  <header class="page-head">
-    <p class="kicker">About</p>
-    <h1>{site.name}</h1>
-    <p class="lede">{site.description}</p>
-    <dl class="facts">
-      <div>
-        <dt>Lives</dt>
-        <dd>{site.location}</dd>
-      </div>
-      <div>
-        <dt>GitHub</dt>
-        <dd><a rel="me" href={site.github}>{site.handle}</a></dd>
-      </div>
-    </dl>
-  </header>
-  <div class="prose">
-    <Content />
-  </div>
+<Base bare title="About">
+  <Postcard />
 </Base>

@@ -4,5 +4,5 @@ export const site = {
   description: 'A tinkerer learning the ways of the world.',
   location: 'Missoula, Montana',
   github: 'https://github.com/wolfe4O6',
-  url: 'https://wolfe4O6.github.io',
+  url: 'https://williamkearns.org',
 } as const;

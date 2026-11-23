@@ -1,0 +1,429 @@
+.postcard-page {
+  display: block;
+  margin: 0;
+  min-height: 100vh;
+  background: #b7a488;
+  color: #24180f;
+}
+
+.postcard-page .skip-link {
+  z-index: 20;
+}
+
+.desk {
+  min-height: 100vh;
+  padding: 1.25rem 1rem 2.5rem;
+  background-image: radial-gradient(#2a1c12 0.6px, transparent 0.7px);
+  background-size: 4px 4px;
+  background-color: #b7a488;
+}
+
+.card-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  width: 92%;
+  max-width: 64rem;
+  margin: 0 auto 0.8rem;
+  font-family: var(--font-display);
+}
+
+.card-nav a {
+  color: #24180f;
+  text-decoration: none;
+  border-bottom: 1px solid #24180f;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.postcard {
+  width: 92%;
+  max-width: 64rem;
+  margin: 0 auto;
+  position: relative;
+  background: #f3e2c4;
+  color: #24180f;
+  box-shadow: 7px 8px 0 rgba(48, 28, 14, 0.28);
+  --scallop: 14px;
+  -webkit-mask:
+    radial-gradient(circle at var(--scallop) 0, transparent calc(var(--scallop) - 1px), #000 var(--scallop)) top / calc(var(--scallop) * 2) var(--scallop) repeat-x,
+    radial-gradient(circle at var(--scallop) 100%, transparent calc(var(--scallop) - 1px), #000 var(--scallop)) bottom / calc(var(--scallop) * 2) var(--scallop) repeat-x,
+    radial-gradient(circle at 0 var(--scallop), transparent calc(var(--scallop) - 1px), #000 var(--scallop)) left / var(--scallop) calc(var(--scallop) * 2) repeat-y,
+    radial-gradient(circle at 100% var(--scallop), transparent calc(var(--scallop) - 1px), #000 var(--scallop)) right / var(--scallop) calc(var(--scallop) * 2) repeat-y,
+    linear-gradient(#000, #000) center / calc(100% - var(--scallop) * 2) calc(100% - var(--scallop) * 2) no-repeat;
+  mask:
+    radial-gradient(circle at var(--scallop) 0, transparent calc(var(--scallop) - 1px), #000 var(--scallop)) top / calc(var(--scallop) * 2) var(--scallop) repeat-x,
+    radial-gradient(circle at var(--scallop) 100%, transparent calc(var(--scallop) - 1px), #000 var(--scallop)) bottom / calc(var(--scallop) * 2) var(--scallop) repeat-x,
+    radial-gradient(circle at 0 var(--scallop), transparent calc(var(--scallop) - 1px), #000 var(--scallop)) left / var(--scallop) calc(var(--scallop) * 2) repeat-y,
+    radial-gradient(circle at 100% var(--scallop), transparent calc(var(--scallop) - 1px), #000 var(--scallop)) right / var(--scallop) calc(var(--scallop) * 2) repeat-y,
+    linear-gradient(#000, #000) center / calc(100% - var(--scallop) * 2) calc(100% - var(--scallop) * 2) no-repeat;
+}
+
+.face[hidden] {
+  display: none !important;
+}
+
+.face {
+  display: none;
+  position: relative;
+  padding: 1.6rem 1.7rem 1.4rem;
+}
+
+.face.is-shown {
+  display: block;
+  animation: card-turn 0.55s ease;
+}
+
+.postcard.is-instant .face.is-shown {
+  animation: none;
+}
+
+.greet {
+  margin: 0;
+  text-align: center;
+  color: #8d2b24;
+  font-family: var(--font-display);
+  font-weight: 620;
+  font-size: clamp(1.1rem, 2.4vw, 1.7rem);
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+}
+
+.word {
+  margin: 0.15rem 0 0;
+  text-align: center;
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(3.4rem, 11vw, 8.6rem);
+  line-height: 0.82;
+  letter-spacing: -0.045em;
+  text-transform: uppercase;
+  color: transparent;
+  background-image: var(--photo-m), var(--photo-l);
+  background-repeat: no-repeat;
+  background-size: 52% 100%, 52% 100%;
+  background-position: left center, right center;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-stroke: 2px #6e241c;
+  paint-order: stroke fill;
+  filter: sepia(0.28) contrast(1.08);
+}
+
+.scene {
+  display: block;
+  width: min(46rem, 100%);
+  height: auto;
+  margin: 0.4rem auto 0;
+}
+
+.scene text {
+  font-family: var(--font-display);
+  font-size: 13px;
+  fill: #2c4a52;
+  letter-spacing: 0.12em;
+}
+
+.front-tools {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  box-sizing: border-box;
+  max-width: 100%;
+  margin: 0.45rem 0 0.15rem;
+  padding-right: 1.75rem;
+}
+
+.turn {
+  min-height: 44px;
+  padding: 0.4rem 0.9rem;
+  border: 1.5px solid #24180f;
+  background: transparent;
+  color: #24180f;
+  font: inherit;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.turn:hover {
+  background: #24180f;
+  color: #f3e2c4;
+}
+
+.postmark {
+  width: 5.1rem;
+  height: auto;
+  flex: none;
+  transform: rotate(-8deg);
+  transform-origin: center;
+}
+
+.postcard.is-stamped .postmark {
+  animation: stamp-in 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.back {
+  display: none;
+}
+
+.face.back.is-shown {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 1.2rem 1.6rem;
+  align-items: start;
+}
+
+.note {
+  margin: 0;
+  border-right: 1px solid #c4554a;
+  padding-right: 1.1rem;
+  font-family: 'Caveat', 'Segoe Print', cursive;
+  font-size: clamp(1.45rem, 2.4vw, 1.9rem);
+  line-height: 1.25;
+  color: #243c86;
+}
+
+.note p {
+  margin: 0 0 0.7rem;
+}
+
+.note a {
+  color: inherit;
+}
+
+.stamps {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.45rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stamps li {
+  width: 6.4rem;
+  min-height: 4.4rem;
+  display: grid;
+  place-items: center;
+  padding: 0.45rem;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 0.92rem;
+  line-height: 1.1;
+  color: #6e241c;
+  background: #f7efe0;
+  border: 1px dashed #8d2b24;
+  transform: rotate(var(--tilt));
+}
+
+.stamps li:nth-child(1) { --tilt: -3deg; }
+.stamps li:nth-child(2) { --tilt: 2deg; }
+.stamps li:nth-child(3) { --tilt: -1deg; }
+.stamps li:nth-child(4) { --tilt: 3deg; }
+.stamps li:nth-child(5) { --tilt: -2deg; }
+
+.address {
+  margin: 0.9rem 0 0;
+  text-align: right;
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  line-height: 1.35;
+}
+
+.address a {
+  color: inherit;
+}
+
+.enclosed {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding-top: 0.3rem;
+  border-top: 1px solid #c4a882;
+}
+
+.enclosed h2 {
+  margin: 0.4rem 0 0.2rem;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 560;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.slips {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.slips a {
+  display: grid;
+  grid-template-columns: 11rem minmax(0, 1fr);
+  gap: 0.6rem;
+  padding: 0.45rem 0;
+  border-top: 1px solid #e2cfad;
+  color: #24180f;
+  text-decoration: none;
+  min-height: 44px;
+  align-items: baseline;
+}
+
+.slips a:hover strong {
+  text-decoration: underline;
+}
+
+.slips strong {
+  font-family: var(--font-display);
+  font-weight: 560;
+}
+
+.credits {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: #5c4632;
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+
+.credits a {
+  color: inherit;
+}
+
+.slip-page {
+  width: min(44rem, 100%);
+  margin: 0 auto;
+}
+
+.slip-page h1 {
+  margin: 0 0 0.4rem;
+  font-family: var(--font-display);
+  font-weight: 560;
+  font-size: clamp(2.2rem, 6vw, 3.4rem);
+  letter-spacing: -0.03em;
+}
+
+.slip-page .lede {
+  margin: 0 0 1rem;
+}
+
+.mail {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.7rem;
+}
+
+.mail a {
+  display: block;
+  padding: 0.85rem 0.95rem;
+  background: #f3e2c4;
+  color: #24180f;
+  text-decoration: none;
+  border: 1px solid #24180f;
+  box-shadow: 4px 4px 0 rgba(48, 28, 14, 0.22);
+  min-height: 44px;
+}
+
+.mail a:nth-child(odd) {
+  transform: rotate(-0.4deg);
+}
+
+.mail a:nth-child(even) {
+  transform: rotate(0.35deg);
+}
+
+.mail strong {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 560;
+}
+
+.mail span {
+  display: block;
+  margin-top: 0.2rem;
+}
+
+@keyframes card-turn {
+  from {
+    transform: rotateY(78deg);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+@keyframes stamp-in {
+  from {
+    transform: rotate(-18deg) scale(1.35);
+    opacity: 0;
+  }
+  to {
+    transform: rotate(-8deg) scale(1);
+    opacity: 1;
+  }
+}
+
+@media (max-width: 759px) {
+  .desk {
+    padding: 0.75rem 0.55rem 1.6rem;
+  }
+
+  .face {
+    padding: 1.15rem 0.95rem 1rem;
+  }
+
+  .word {
+    font-size: clamp(2.7rem, 15.2vw, 4.4rem);
+    -webkit-text-stroke-width: 1px;
+  }
+
+  .face.back.is-shown {
+    grid-template-columns: 1fr;
+  }
+
+  .note {
+    border-right: 0;
+    padding-right: 0;
+  }
+
+  .turn {
+    letter-spacing: 0.04em;
+  }
+
+  .postmark {
+    width: 4.4rem;
+  }
+
+  .stamps {
+    justify-content: flex-start;
+  }
+
+  .address {
+    text-align: left;
+  }
+
+  .slips a {
+    grid-template-columns: 1fr;
+    gap: 0.1rem;
+  }
+
+  .front-tools {
+    align-items: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .face.is-shown,
+  .postcard.is-stamped .postmark {
+    animation: none;
+  }
+}

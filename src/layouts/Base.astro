@@ -15,6 +15,8 @@ interface Props {
   published?: Date;
   /** Wider desk for home, projects, and photos. Reading pages stay narrow. */
   wide?: boolean;
+  /** Full-page postcard, without the old site header. */
+  bare?: boolean;
 }
 
 const {
@@ -23,6 +25,7 @@ const {
   ogType = 'website',
   published,
   wide = false,
+  bare = false,
 } = Astro.props;
 
 const pageTitle = title ? `${title} · ${site.name}` : site.name;
@@ -72,14 +75,22 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <meta name="generator" content={Astro.generator} />
     <slot name="head" />
   </head>
-  <body>
-    <a class="skip-link" href="#content">Skip to content</a>
-    <Header />
-    <main id="content">
-      <div class:list={['shell', { wide }]}>
+  <body class:list={{ 'postcard-page': bare }}>
+    <a class="skip-link" href={bare ? '#postcard' : '#content'}>Skip to content</a>
+    {
+      bare ? (
         <slot />
-      </div>
-    </main>
-    <Footer />
+      ) : (
+        <>
+          <Header />
+          <main id="content">
+            <div class:list={['shell', { wide }]}>
+              <slot />
+            </div>
+          </main>
+          <Footer />
+        </>
+      )
+    }
   </body>
 </html>

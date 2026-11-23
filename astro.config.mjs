@@ -7,7 +7,7 @@ import sitemap from '@astrojs/sitemap';
 // wolfe4O6.github.io, so the site is served from the domain root.
 // Do not set `base` — a base path would break a user site.
 export default defineConfig({
-  site: 'https://wolfe4O6.github.io',
+  site: 'https://williamkearns.org',
   trailingSlash: 'always',
   integrations: [mdx(), sitemap()],
   markdown: {
