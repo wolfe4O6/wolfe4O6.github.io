@@ -11,7 +11,7 @@
     * { box-sizing: border-box; }
     body { margin: 0; font: 1rem/1.6 system-ui, sans-serif; }
     main { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
-    .copy { padding: clamp(4rem, 12vh, 8rem) clamp(1.5rem, 6vw, 5.5rem) 4rem; }
+    .copy { padding: clamp(4rem, 12vh, 8rem) clamp(1.5rem, 6vw, 5.5rem) 8rem; }
     .greeting { margin: 0 0 1rem; font-size: clamp(1.35rem, 2.7vw, 2rem); font-weight: 500; line-height: 1.3; }
     h1 {
       margin: 0; font: 500 clamp(3.6rem, 10vw, 8.25rem)/.98 Georgia, serif;
@@ -20,9 +20,22 @@
     h1 span { display: block; }
     .about { max-width: 39rem; margin-top: clamp(2.5rem, 5vw, 4rem); }
     p { margin: 1.25rem 0 0; font-size: clamp(1.05rem, 1.6vw, 1.23rem); }
-    .contact-links { display: flex; flex-wrap: wrap; gap: 1.5rem; }
-    .about a { color: inherit; text-underline-offset: .25em; }
-    .about a:focus-visible { outline: 2px solid currentColor; outline-offset: 4px; }
+    .contact-links {
+      position: fixed; z-index: 5; isolation: isolate; left: 0; bottom: 0;
+      width: 50%; display: flex; flex-wrap: wrap; gap: 1.5rem;
+      padding: 2rem clamp(1.5rem, 6vw, 5.5rem) max(1.25rem, env(safe-area-inset-bottom));
+      font-size: clamp(1.05rem, 1.6vw, 1.23rem);
+    }
+    .contact-links::before {
+      content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+      background: linear-gradient(transparent, rgba(237, 242, 232, .94) 65%);
+      -webkit-backdrop-filter: blur(7px); backdrop-filter: blur(7px);
+      -webkit-mask-image: linear-gradient(transparent, black 45%);
+      mask-image: linear-gradient(transparent, black 45%);
+    }
+    .contact-links a { display: inline-flex; align-items: center; min-height: 2.75rem; }
+    .contact-links a { color: inherit; text-underline-offset: .25em; }
+    .contact-links a:focus-visible { outline: 2px solid currentColor; outline-offset: 4px; }
     .intro {
       margin: 0 0 2rem; font: 400 clamp(1.5rem, 2.5vw, 2rem)/1.35 Georgia, serif;
       letter-spacing: -.02em;
@@ -79,6 +92,16 @@
       main { display: flex; flex-direction: column; }
       .copy { display: contents; }
       .identity { order: 0; padding: 3rem 1.5rem 2rem; }
+      .contact-links {
+        top: calc(2.5rem + env(safe-area-inset-top)); right: 1.5rem;
+        bottom: auto; left: auto; width: auto; padding: 0;
+        flex-direction: column; align-items: flex-end; gap: .25rem; font-size: .95rem;
+      }
+      .contact-links::before {
+        inset: -.5rem -.75rem; border-radius: .75rem;
+        background: rgba(237, 242, 232, .72);
+        -webkit-mask-image: none; mask-image: none;
+      }
       .photos {
         --photo-gutter: 0px;
         order: 1; position: relative; height: min(70svh, 35rem);
@@ -90,6 +113,10 @@
   </style>
 </head>
 <body>
+  <nav class="contact-links" aria-label="Contact links">
+    <a href="https://github.com/wolfe4O6">GitHub</a>
+    <a href="mailto:wk@williamkearns.org">Email</a>
+  </nav>
   <main>
     <div class="copy">
       <div class="identity">
@@ -100,7 +127,6 @@
         <p class="intro">Hi, I’m William. I live in Missoula, Montana. I like long days in the woods and late nights making things with friends.</p>
         <p>I’m into backpacking, camping, and traveling. Back home, I like taking old computers apart and figuring out how to fix them. I care about the right to repair and being able to make things yourself.</p>
         <p>There’s usually music in the mix, too. Guitar and DJ sets. Sometimes the best plan is just getting friends together for gaming.</p>
-        <p class="contact-links"><a href="https://github.com/wolfe4O6">GitHub</a><a href="mailto:wk@williamkearns.org">Email</a></p>
       </div>
     </div>
     <div class="photos">
