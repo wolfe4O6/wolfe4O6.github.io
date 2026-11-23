@@ -1,8 +1,8 @@
 # William Kearns
 
-A small personal site and digital archive: a calm place to check in, and a shelf for notes over time. It is an [Astro](https://astro.build) site, published at [wolfe4O6.github.io](https://wolfe4O6.github.io).
+A small personal site for William Kearns. It is an [Astro](https://astro.build) site, published with GitHub Pages at [williamkearns.org](https://williamkearns.org) and [wolfe4O6.github.io](https://wolfe4O6.github.io).
 
-The home page opens on two photographs of Missoula: the M on Mount Sentinel, and the L on Mount Jumbo. They crossfade. A small control softens the picture toward night. The weather chip is the current Missoula reading from Open-Meteo. Phones use a taller crop of the same two photographs so each letter stays in the frame.
+The home page is a small workshop you can look around. The computer and the 3D printer open his public projects. The pegboard opens a short about. The handheld opens his GitHub. The window looks at Mount Sentinel and Mount Jumbo. The lamp is just a lamp. A List button repeats those same actions without the 3D view. The room itself is original geometry. The two photographs in the window are credited at the bottom of the page.
 
 Photo credits:
 

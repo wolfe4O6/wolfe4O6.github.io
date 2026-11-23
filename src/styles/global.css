@@ -110,9 +110,7 @@ body {
   flex-direction: column;
   overflow-x: clip;
   background-color: var(--bg);
-  background-image:
-    radial-gradient(ellipse 80% 42% at 10% -10%, var(--glow-warm), transparent 55%),
-    radial-gradient(ellipse 50% 36% at 100% 0%, var(--glow-sage), transparent 50%);
+  background-image: none;
   color: var(--ink);
   font-family: var(--font-body);
   font-size: 1.0625rem;
@@ -2094,6 +2092,17 @@ button.stamp {
     left: 57% !important;
     top: 47% !important;
   }
+}
+
+.project-card,
+.notecard,
+.polaroid,
+.postcard,
+.archive-list,
+.note {
+  border-radius: 0;
+  box-shadow: none;
+  transform: none;
 }
 
 @media print {
