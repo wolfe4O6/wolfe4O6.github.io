@@ -1,0 +1,127 @@
+---
+import '../styles/room.css';
+import { site } from '../site';
+import { projects, projectUrl } from '../data/projects';
+import { heroPhotos } from '../data/hero-photos';
+import sentinel from '../assets/missoula/sentinel-m.webp';
+import jumbo from '../assets/missoula/jumbo-l.webp';
+
+const panes = { m: sentinel, l: jumbo };
+---
+
+<div
+  class="room"
+  data-room
+  data-sentinel={panes.m.src}
+  data-jumbo={panes.l.src}
+>
+  <p class="room-name">
+    {site.name}
+    <small>{site.location}</small>
+  </p>
+  <p class="room-hint" hidden>Drag to look around. Click anything on the bench.</p>
+
+  <div class="room-load" data-load>
+    <p>Warming up the bench…</p>
+    <div class="room-bar" aria-hidden="true"><span data-bar></span></div>
+  </div>
+
+  <canvas data-canvas aria-hidden="true"></canvas>
+  <p class="room-label" data-label hidden></p>
+
+  <button class="room-list-toggle" type="button" data-list-toggle aria-expanded="false" aria-controls="room-list">
+    List
+  </button>
+  <ul class="room-list" id="room-list" data-list data-shown="0">
+    <li><button type="button" data-open="computer">Computer · projects</button></li>
+    <li><button type="button" data-open="printer">3D printer · projects</button></li>
+    <li><button type="button" data-open="handheld">Handheld · GitHub</button></li>
+    <li><button type="button" data-open="pegboard">Pegboard · about</button></li>
+    <li><button type="button" data-open="window">Window · Missoula</button></li>
+    <li><button type="button" data-open="lamp">Lamp</button></li>
+  </ul>
+
+  <aside class="room-panel" data-panel hidden>
+    <button class="room-scrim" type="button" data-scrim aria-label="Close"></button>
+    <div class="room-sheet">
+      <header>
+        <h2 data-panel-title>Bench</h2>
+        <button class="room-close" type="button" data-close>Close</button>
+      </header>
+
+      <div data-sheet="projects">
+        <p class="room-kicker">On the bench</p>
+        {
+          projects.map((project) => (
+            <article class="room-project">
+              <h3>
+                <a href={projectUrl(project.repo)}>{project.name}</a>
+              </h3>
+              <p>{project.description}</p>
+            </article>
+          ))
+        }
+      </div>
+
+      <div data-sheet="about" hidden>
+        <p class="room-kicker">About</p>
+        <div class="room-about">
+          <p>{site.name}</p>
+          <p>{site.description}</p>
+          <p>{site.location}</p>
+        </div>
+      </div>
+
+      <div data-sheet="links" hidden>
+        <p class="room-kicker">Links</p>
+        <div class="room-links">
+          <p>
+            <a href={site.github}>GitHub · {site.handle}</a>
+          </p>
+        </div>
+      </div>
+
+      <div data-sheet="window" hidden>
+        <p class="room-kicker">Out the window</p>
+        <div class="room-about">
+          <p>Mount Sentinel and Mount Jumbo, Missoula.</p>
+          {
+            heroPhotos.map((photo) => (
+              <p>
+                {photo.label}, {photo.place}. {photo.credit.photographer},{' '}
+                <a href={photo.credit.licenseUrl}>{photo.credit.license}</a>,{' '}
+                <a href={photo.credit.sourceUrl}>Wikimedia Commons</a>.
+              </p>
+            ))
+          }
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <p class="room-credits">
+    The room is original low-poly geometry, built for this page. No downloaded models.
+    {' '}
+    {
+      heroPhotos.map((photo, index) => (
+        <>
+          {index > 0 && ' '}
+          {photo.label}: {photo.credit.photographer},{' '}
+          <a href={photo.credit.licenseUrl}>{photo.credit.license}</a>,{' '}
+          <a href={photo.credit.sourceUrl}>Wikimedia Commons</a>.
+        </>
+      ))
+    }
+    {' '}
+    <a href="/archive/">Archive</a>
+  </p>
+</div>
+
+<script>
+  const root = document.querySelector<HTMLElement>('[data-room]');
+  if (root && root.dataset.ready !== '1') {
+    root.dataset.ready = '1';
+    const { mountRoom } = await import('../scripts/room');
+    mountRoom(root);
+  }
+</script>

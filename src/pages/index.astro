@@ -1,23 +1,7 @@
 ---
-import { getEntry, render } from 'astro:content';
 import Base from '../layouts/Base.astro';
-import PhotoHero from '../components/PhotoHero.astro';
-import PostList from '../components/PostList.astro';
-import Listening from '../components/Listening.astro';
-import ProjectCard from '../components/ProjectCard.astro';
-import River from '../components/River.astro';
+import Room from '../components/Room.astro';
 import { site } from '../site';
-import { getPosts } from '../lib/posts';
-import { formatDate, isoDate } from '../lib/dates';
-import { featuredProjects } from '../data/projects';
-
-const posts = (await getPosts()).slice(0, 3);
-const featured = featuredProjects();
-const now = await getEntry('pages', 'now');
-if (!now) {
-  throw new Error('Missing src/content/pages/now.md');
-}
-const { Content } = await render(now);
 
 const person = {
   '@context': 'https://schema.org',
@@ -33,65 +17,9 @@ const person = {
 };
 ---
 
-<Base wide>
+<Base bare>
   <Fragment slot="head">
     <script type="application/ld+json" set:html={JSON.stringify(person)} />
   </Fragment>
-
-  <PhotoHero />
-
-  <div class="home-split">
-    <section class="notecard now-card" aria-labelledby="now-heading">
-      <span class="tape" aria-hidden="true"></span>
-      <div class="section-head">
-        <h2 id="now-heading">Now</h2>
-        <a href="/now/">The full page</a>
-      </div>
-      {
-        now.data.updated && (
-          <p class="updated">
-            Updated <time datetime={isoDate(now.data.updated)}>{formatDate(now.data.updated)}</time>
-          </p>
-        )
-      }
-      <div class="prose">
-        <Content />
-      </div>
-    </section>
-    <Listening compact />
-  </div>
-
-  {
-    featured.length > 0 && (
-      <section class="section" aria-labelledby="projects-heading">
-        <div class="section-head">
-          <h2 id="projects-heading">On the workbench</h2>
-          <a href="/projects/">All projects</a>
-        </div>
-        <div class="project-grid">
-          {featured.map((project, index) => (
-            <ProjectCard project={project} index={index} />
-          ))}
-        </div>
-      </section>
-    )
-  }
-
-  <River />
-
-  <section class="section" aria-labelledby="recent-heading">
-    <div class="section-head">
-      <h2 id="recent-heading">Recent</h2>
-      <a href="/archive/">All posts</a>
-    </div>
-    {
-      posts.length === 0 ? (
-        <p class="empty">
-          Nothing filed yet. A new note is a Markdown file in <code>src/content/posts</code>.
-        </p>
-      ) : (
-        <PostList posts={posts} variant="cards" />
-      )
-    }
-  </section>
+  <Room />
 </Base>
