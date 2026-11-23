@@ -37,10 +37,8 @@
     .photo-scroll:focus-visible { outline: 2px solid #496653; outline-offset: -3px; }
     .photo-group { display: grid; gap: 1.25rem; padding-bottom: 1.25rem; }
     .photo-scroll img { display: block; width: 100%; height: auto; border-radius: .75rem; }
-    .photos.is-ready .photo-scroll { overflow: hidden; }
-    .photos.is-ready .photo-track { animation: photo-drift 125s linear infinite; }
-    .photos:hover .photo-track,
-    .photos:focus-within .photo-track { animation-play-state: paused; }
+    .photos.is-ready .photo-scroll { overflow: hidden; touch-action: pan-x; }
+    .photos.is-ready .photo-track { will-change: transform; }
     .photos::before, .photos::after {
       content: ""; position: absolute; z-index: 1; pointer-events: none;
       left: 0; right: var(--photo-gutter); height: clamp(4rem, 10vh, 7rem);
@@ -56,10 +54,9 @@
       -webkit-mask-image: linear-gradient(transparent, black);
       mask-image: linear-gradient(transparent, black);
     }
-    @keyframes photo-drift { to { transform: translateY(-50%); } }
     @media (prefers-reduced-motion: reduce) {
-      .photos.is-ready .photo-track { animation: none; }
-      .photos.is-ready .photo-scroll { overflow-y: auto; }
+      .photos.is-ready .photo-track { transform: none !important; will-change: auto; }
+      .photos.is-ready .photo-scroll { overflow-y: auto; touch-action: auto; }
       .photo-group[aria-hidden="true"] { display: none; }
     }
     @media (max-width: 46rem) {
@@ -90,7 +87,7 @@
       </div>
     </div>
     <div class="photos">
-      <div class="photo-scroll" role="region" aria-label="Personal photos. Hover or focus to pause." tabindex="0">
+      <div class="photo-scroll" role="region" aria-label="Personal photos. Scroll or drag to browse. Focus to pause automatic motion." tabindex="0">
         <div class="photo-track">
           <div class="photo-group">
             <img src="/images/valley.jpeg" width="2364" height="1330" fetchpriority="high"
@@ -110,15 +107,99 @@
   </main>
   <script is:inline>
     const photos = document.querySelector('.photos');
+    const viewport = photos.querySelector('.photo-scroll');
     const track = photos.querySelector('.photo-track');
     const group = track.querySelector('.photo-group');
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    let loopHeight = 0;
+    let position = 0;
+    let extraSpeed = 0;
+    let lastFrame = 0;
+    let focused = false;
+    let drag = null;
 
-    // Equal-height copies make the loop meet at the same photo and spacing.
     const copy = group.cloneNode(true);
     copy.setAttribute('aria-hidden', 'true');
     copy.querySelectorAll('img').forEach(image => { image.alt = ''; });
     track.append(copy);
+
+    function renderPosition() {
+      if (!loopHeight) return;
+      // Wrapping in either direction keeps the two identical groups seamless.
+      position = ((position % loopHeight) + loopHeight) % loopHeight;
+      track.style.transform = 'translateY(' + (-position) + 'px)';
+    }
+
+    new ResizeObserver(() => {
+      const nextHeight = group.getBoundingClientRect().height;
+      if (loopHeight) position *= nextHeight / loopHeight;
+      loopHeight = nextHeight;
+      renderPosition();
+    }).observe(group);
+
+    viewport.addEventListener('wheel', event => {
+      if (reducedMotion.matches || event.ctrlKey || !event.cancelable) return;
+      const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? viewport.clientHeight : 1;
+      const distance = event.deltaY * unit;
+      if (!distance) return;
+      event.preventDefault();
+      position += distance * 0.5;
+      extraSpeed = Math.max(-1800, Math.min(1800, extraSpeed + distance * 6));
+      renderPosition();
+    }, { passive: false });
+
+    viewport.addEventListener('focus', () => { focused = true; });
+    viewport.addEventListener('blur', () => { focused = false; });
+    viewport.addEventListener('keydown', event => {
+      if (reducedMotion.matches) return;
+      const steps = { ArrowDown: 80, ArrowUp: -80, PageDown: viewport.clientHeight * 0.8,
+        PageUp: -viewport.clientHeight * 0.8, ' ': viewport.clientHeight * 0.8 };
+      if (!(event.key in steps) || event.ctrlKey || event.altKey || event.metaKey) return;
+      event.preventDefault();
+      position += steps[event.key] * (event.key === ' ' && event.shiftKey ? -1 : 1);
+      extraSpeed = 0;
+      renderPosition();
+    });
+
+    viewport.addEventListener('pointerdown', event => {
+      if (reducedMotion.matches || event.pointerType === 'mouse' || !event.isPrimary) return;
+      viewport.setPointerCapture(event.pointerId);
+      drag = { id: event.pointerId, y: event.clientY, time: event.timeStamp };
+      extraSpeed = 0;
+    });
+    viewport.addEventListener('pointermove', event => {
+      if (!drag || drag.id !== event.pointerId) return;
+      const distance = drag.y - event.clientY;
+      position += distance;
+      extraSpeed = Math.max(-1800, Math.min(1800, distance * 1000 / Math.max(16, event.timeStamp - drag.time)));
+      drag.y = event.clientY;
+      drag.time = event.timeStamp;
+      renderPosition();
+    });
+    viewport.addEventListener('pointerup', () => { drag = null; });
+    viewport.addEventListener('pointercancel', () => { drag = null; extraSpeed = 0; });
+
+    reducedMotion.addEventListener('change', () => {
+      extraSpeed = 0;
+      drag = null;
+      viewport.scrollTop = 0;
+    });
+    document.addEventListener('visibilitychange', () => { lastFrame = 0; });
+
+    function animate(time) {
+      const elapsed = lastFrame ? Math.min((time - lastFrame) / 1000, 0.05) : 0;
+      lastFrame = time;
+      if (!reducedMotion.matches && !document.hidden && !drag) {
+        const automaticSpeed = focused ? 0 : loopHeight / 125;
+        position += (automaticSpeed + extraSpeed) * elapsed;
+        extraSpeed *= Math.exp(-2.5 * elapsed);
+        renderPosition();
+      }
+      requestAnimationFrame(animate);
+    }
+
     photos.classList.add('is-ready');
+    requestAnimationFrame(animate);
   </script>
 </body>
 </html>
