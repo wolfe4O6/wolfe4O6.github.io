@@ -103,7 +103,7 @@ The palette inherits its green character from the established homepage. Frontmat
 **Display Font:** Georgia with serif fallback.
 **Body Font:** system-ui with sans-serif fallback.
 
-Georgia carries the name, introduction, about heading, closing thought, and photo captions. System sans carries supporting prose, navigation, dates, and counts. The desktop hierarchy is captured in frontmatter. About paragraphs scale from 1.05rem to 1.15rem; the closing thought is 1.5rem with 1.4 line height.
+Georgia carries the name, introduction, about heading, and photo captions. System sans carries supporting prose, navigation, dates, and counts. The desktop hierarchy is captured in frontmatter. About paragraphs scale from 1.05rem to 1.15rem.
 
 At the narrow breakpoint, the name uses `clamp(4.3rem,18vw,6.5rem)` with .97 line height; the intro is 1.18rem, the about heading 2.6rem, and about paragraphs 1.025rem with 1.65 line height. Captions become 1.2rem and navigation labels .9rem. Keep the name in two lines.
 

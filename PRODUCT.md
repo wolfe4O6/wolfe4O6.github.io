@@ -4,7 +4,7 @@ William's personal website at https://williamkearns.org/, published from this re
 
 Approved identity: sage #edf2e8, evergreen #1b392d, a large two-line Georgia name, and minimal navigation with GitHub and email logos. Contact destinations are https://github.com/wolfe4O6 and mailto:wk@williamkearns.org. Do not add a divider to the top navigation or a visible pause-photos control.
 
-William lives in Missoula, Montana. His approved introduction is: “I live in Missoula, Montana. I love long days in the woods and late nights making music with friends.” Interests and values in the current bio include backpacking, camping, traveling, old computers, retro tech, right to repair, guitar, DJ sets, gaming, creativity, kindness, and making the most of what you have. Preserve these facts without inventing new claims.
+William lives in Missoula, Montana. His approved introduction is: “I live in Missoula, Montana. I love long days in the woods and late nights making music with friends.” Interests in the current bio include backpacking, camping, traveling, old computers, retro tech, right to repair, guitar, DJ sets, and gaming. Preserve these facts without inventing new claims. The user removed the closing values statement from the About section; do not reintroduce it.
 
 The user approved the local floating-photo concept and explicitly requested immediate implementation and publication on November 24, 2026. The homepage now uses the whole screen for photographs surrounding steady readable text, continuing around the bio as visitors scroll. Its design references are old Apple TV photo screensavers and Fred again's distributed imagery; preserve William's identity rather than copying another site's branding.
 
