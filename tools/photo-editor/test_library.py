@@ -5,6 +5,7 @@ from pathlib import Path
 import subprocess
 import tempfile
 import unittest
+from html.parser import HTMLParser
 
 from PIL import Image, PngImagePlugin
 from library import PhotoLibrary, ConflictError, clean_upload, validate_gallery
@@ -13,9 +14,35 @@ TEMPLATE = '''---
 ---
 <html><head><style is:global></style></head><body>
 <main class={gallery.length ? undefined : "text-only"}>
-<div class="photos" hidden={!gallery.length}><div class="photo-group">
+<div class="photo-field" hidden={!gallery.length}>
 <!-- GALLERY_START -->dynamic<!-- GALLERY_END -->
-</div></div></main><script is:inline></script></body></html>'''
+</div><button class="browse" hidden={!gallery.length}>Browse photos</button></main>
+<!-- VIEWER_IMAGE_START -->dynamic<!-- VIEWER_IMAGE_END -->
+<!-- GALLERY_DATA_START -->dynamic<!-- GALLERY_DATA_END -->
+<script is:inline></script></body></html>'''
+
+class GalleryHTML(HTMLParser):
+    def __init__(self, source):
+        super().__init__()
+        self.buttons = []
+        self.in_data = False
+        self.data = ''
+        self.feed(source)
+
+    def handle_starttag(self, tag, attrs):
+        attrs = dict(attrs)
+        if tag == 'button':
+            self.buttons.append(attrs)
+        if tag == 'script' and attrs.get('id') == 'gallery-data':
+            self.in_data = True
+
+    def handle_endtag(self, tag):
+        if tag == 'script':
+            self.in_data = False
+
+    def handle_data(self, data):
+        if self.in_data:
+            self.data += data
 
 def jpeg():
     image = Image.new('RGB', (24, 40), '#356244')
@@ -132,7 +159,7 @@ class LibraryTests(unittest.TestCase):
         state = self.library.save([photo], before['revision'])
         html = (self.library.preview / 'index.html').read_text()
         self.assertIn('&lt;script&gt;example&lt;/script&gt;', html)
-        self.assertIn('May 6, 2026', html)
+        self.assertEqual(json.loads(GalleryHTML(html).data)[0]['date'], '2026-05-06')
         with self.assertRaises(ConflictError):
             self.library.save([], before['revision'])
         self.assertEqual(self.library.state()['revision'], state['revision'])
@@ -144,6 +171,41 @@ class LibraryTests(unittest.TestCase):
         self.assertEqual(self.library.state()['photos'], [])
         self.assertFalse((self.repo / 'public/images' / Path(photo['src']).name).exists())
         self.assertIn('class="text-only"', (self.library.preview / 'index.html').read_text())
+        rendered = GalleryHTML((self.library.preview / 'index.html').read_text())
+        self.assertEqual(json.loads(rendered.data), [])
+        self.assertIn('hidden', rendered.buttons[0])
+
+    def test_photo_field_limits_visible_slots_and_keeps_all_gallery_data(self):
+        photo = self.add_photo()
+        entries = [dict(photo, id=f'photo-{i}', caption=f'Caption {i}') for i in range(10)]
+        self.library.save(entries, self.library.state()['revision'])
+        rendered = GalleryHTML((self.library.preview / 'index.html').read_text())
+        slots = [button for button in rendered.buttons if button.get('class') == 'float-photo']
+        self.assertEqual(len(slots), 7)
+        self.assertEqual([button['data-slot'] for button in slots], list(map(str, range(7))))
+        self.assertEqual([photo['caption'] for photo in json.loads(rendered.data)], [entry['caption'] for entry in entries])
+
+    def test_caption_cannot_close_the_gallery_data_script(self):
+        photo = self.add_photo()
+        photo['caption'] = '</script><script>alert("example")</script>'
+        self.library.save([photo], self.library.state()['revision'])
+        html = (self.library.preview / 'index.html').read_text()
+        rendered = GalleryHTML(html)
+        self.assertEqual(json.loads(rendered.data)[0]['caption'], photo['caption'])
+        self.assertNotIn(photo['caption'], html)
+        self.assertEqual(rendered.buttons[0]['data-slot'], '2')
+
+    def test_actual_homepage_renders_without_astro_expressions(self):
+        source = Path(__file__).resolve().parents[2] / 'src/pages/index.astro'
+        (self.repo / 'src/pages/index.astro').write_text(source.read_text())
+        self.library.save([self.add_photo()], self.library.state()['revision'])
+        html = (self.library.preview / 'index.html').read_text()
+        self.assertNotIn('hidden={!gallery.length}', html)
+        self.assertNotIn('{gallery.slice', html)
+        self.assertNotIn('set:html', html)
+        self.assertNotIn('is:inline', html)
+        self.assertNotIn('is:global', html)
+        self.assertEqual(len(json.loads(GalleryHTML(html).data)), 1)
 
     def test_path_traversal_and_invalid_dates_are_rejected(self):
         photo = self.add_photo()

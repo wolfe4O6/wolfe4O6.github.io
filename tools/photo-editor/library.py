@@ -85,26 +85,29 @@ def render_preview(repo, preview, gallery):
     source = source.replace('<style is:global>', '<style>').replace('<script is:inline>', '<script>')
     source = source.replace('<main class={gallery.length ? undefined : "text-only"}>',
         '<main>' if gallery else '<main class="text-only">')
-    source = source.replace('<div class="photos" hidden={!gallery.length}>',
-        '<div class="photos">' if gallery else '<div class="photos" hidden>')
+    source = source.replace('hidden={!gallery.length}', '' if gallery else 'hidden')
+    slots = list(range(7)) if len(gallery) >= 7 else [2, 3, 5] if len(gallery) == 3 else [2, 3, 1, 4, 5, 6][:len(gallery)]
     buttons = []
-    for index, photo in enumerate(gallery):
-        taken = ''
-        if photo['date']:
-            value = date.fromisoformat(photo['date'])
-            label = value.strftime('%B') + ' ' + str(value.day) + value.strftime(', %Y')
-            taken = f'<time datetime="{escape(photo["date"], quote=True)}">{label}</time>'
-        priority = ' fetchpriority="high"' if index == 0 else ''
+    for index, photo in enumerate(gallery[:7]):
+        label = 'View photo: ' + (photo['caption'] or photo['alt'])
         buttons.append(f'''
-            <button class="photo" type="button" aria-expanded="false" data-photo-id="{escape(photo['id'], quote=True)}"
-              style="--photo-ratio: {photo['width'] / photo['height']}">
+            <button class="float-photo" type="button" tabindex="-1" data-index="{index}" data-slot="{slots[index]}"
+              aria-label="{escape(label, quote=True)}" style="--ratio:{photo['width'] / photo['height']}">
               <img src="{escape(photo['src'].lstrip('/'), quote=True)}"
-                width="{photo['width']}" height="{photo['height']}"{priority}
+                width="{photo['width']}" height="{photo['height']}" decoding="async"
                 alt="{escape(photo['alt'], quote=True)}">
-              <span class="photo-caption" hidden><span>{escape(photo['caption'])}</span>{taken}</span>
             </button>''')
     source = re.sub(r'<!-- GALLERY_START -->.*?<!-- GALLERY_END -->',
         lambda match: '\n'.join(buttons), source, flags=re.S)
+    data = [dict(photo, src=photo['src'].lstrip('/')) for photo in gallery]
+    encoded = json.dumps(data, ensure_ascii=False).replace('<', '\\u003c')
+    source = re.sub(r'<!-- GALLERY_DATA_START -->.*?<!-- GALLERY_DATA_END -->',
+        lambda match: '<script type="application/json" id="gallery-data">' + encoded + '</script>', source, flags=re.S)
+    viewer = '<img class="viewer-image" alt="">'
+    if gallery:
+        viewer = f'<img class="viewer-image" src="{escape(data[0]["src"], quote=True)}" alt="{escape(data[0]["alt"], quote=True)}">'
+    source = re.sub(r'<!-- VIEWER_IMAGE_START -->.*?<!-- VIEWER_IMAGE_END -->',
+        lambda match: viewer, source, flags=re.S)
     for photo in gallery:
         original = image_path(repo, photo['src'])
         destination = preview / 'images' / original.name

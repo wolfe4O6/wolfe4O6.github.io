@@ -1,0 +1,212 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-24T15:59:09+00:00",
+  "title": "Design System: William Kearns",
+  "extensions": {
+    "colorMeta": {
+      "ground": {
+        "role": "neutral",
+        "displayName": "Sage Ground",
+        "tonalRamp": [
+          "oklch(15% .01 130)",
+          "oklch(26% .015 130)",
+          "oklch(38% .02 130)",
+          "oklch(50% .025 130)",
+          "oklch(62% .03 130)",
+          "oklch(74% .025 130)",
+          "oklch(86% .02 130)",
+          "oklch(95% .01 130)"
+        ]
+      },
+      "ink": {
+        "role": "primary",
+        "displayName": "Evergreen Ink",
+        "tonalRamp": [
+          "oklch(15% .015 160)",
+          "oklch(26% .03 160)",
+          "oklch(38% .045 160)",
+          "oklch(50% .05 160)",
+          "oklch(62% .05 160)",
+          "oklch(74% .04 160)",
+          "oklch(86% .025 160)",
+          "oklch(95% .01 160)"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Muted Woodland",
+        "tonalRamp": [
+          "oklch(15% .01 145)",
+          "oklch(26% .02 145)",
+          "oklch(38% .035 145)",
+          "oklch(50% .04 145)",
+          "oklch(62% .04 145)",
+          "oklch(74% .035 145)",
+          "oklch(86% .02 145)",
+          "oklch(95% .01 145)"
+        ]
+      },
+      "focus": {
+        "role": "neutral",
+        "displayName": "Deep Focus Green",
+        "tonalRamp": [
+          "oklch(15% .015 155)",
+          "oklch(26% .03 155)",
+          "oklch(38% .05 155)",
+          "oklch(50% .055 155)",
+          "oklch(62% .05 155)",
+          "oklch(74% .04 155)",
+          "oklch(86% .025 155)",
+          "oklch(95% .01 155)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Name",
+        "purpose": "Two-line personal name."
+      },
+      "headline": {
+        "displayName": "About heading",
+        "purpose": "Section heading."
+      },
+      "intro": {
+        "displayName": "Introduction",
+        "purpose": "Opening personal introduction."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Supporting prose."
+      },
+      "label": {
+        "displayName": "Navigation",
+        "purpose": "Contact links and About."
+      },
+      "caption": {
+        "displayName": "Photo caption",
+        "purpose": "Saved gallery caption."
+      }
+    },
+    "shadows": [
+      {
+        "name": "photo-rest",
+        "value": "0 10px 26px -16px rgba(27,57,45,.35)",
+        "purpose": "Ambient separation for field photographs."
+      },
+      {
+        "name": "photo-hover",
+        "value": "0 18px 35px -15px rgba(27,57,45,.4)",
+        "purpose": "Mouse inspection of a field photograph."
+      }
+    ],
+    "motion": [
+      {
+        "name": "photo-shadow",
+        "value": "220ms ease",
+        "purpose": "Hover shadow transition."
+      },
+      {
+        "name": "photo-rise-speeds",
+        "value": "5.3, 7, 4.4, 6.2, 8.1, 5.7, 4.8 px per active second",
+        "purpose": "Independent desktop slot drift before wheel and scroll influence."
+      },
+      {
+        "name": "replacement-delay",
+        "value": "14s",
+        "purpose": "Active animation time between extra-gallery replacements."
+      },
+      {
+        "name": "replacement-fade",
+        "value": "350ms out, 350ms in",
+        "purpose": "One preloaded replacement at a time."
+      },
+      {
+        "name": "motion-gates",
+        "value": "pause on mouse inspection, visible field focus, open viewer; stop loop when hidden or reduced motion",
+        "purpose": "Preserve inspection, accessibility, and hidden-document suspension."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "narrow",
+        "value": "46rem"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Contact navigation",
+      "kind": "nav",
+      "refersTo": "navigation",
+      "description": "Opaque navigation with About at left and contact links at right; specimen fits its container.",
+      "html": "<nav class=\"ds-navigation\" aria-label=\"Navigation\"><a class=\"ds-about\" href=\"#about\">About</a><a href=\"https://github.com/wolfe4O6\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577v-2.04c-3.338.724-4.042-1.416-4.042-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.09-.745.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22v3.286c0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12\"/></svg>GitHub</a><a href=\"mailto:wk@williamkearns.org\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\"><rect x=\"3\" y=\"5\" width=\"18\" height=\"14\" rx=\"2\"/><path d=\"m3 7 9 6 9-6\"/></svg>Email</a></nav>",
+      "css": ".ds-navigation{display:flex;align-items:center;gap:1.7rem;height:5rem;padding:0 2.5rem;background:var(--ground,#edf2e8);color:var(--ink,#1b392d);font-family:system-ui,sans-serif}.ds-navigation a{display:inline-flex;align-items:center;gap:.5rem;min-height:44px;font-size:.95rem;text-decoration:none;color:inherit;text-underline-offset:.25em}.ds-navigation a:hover{text-decoration:underline}.ds-navigation a:focus-visible{outline:2px solid var(--focus,#294f3d);outline-offset:5px}.ds-navigation .ds-about{margin-right:auto}.ds-navigation svg{width:1.15rem;height:1.15rem}.ds-navigation a:first-of-type+ a svg{fill:currentColor}@media(max-width:46rem){.ds-navigation{height:4.5rem;gap:1.2rem;padding:0 1.25rem}.ds-navigation a{font-size:.9rem}}"
+    },
+    {
+      "name": "Browse photos",
+      "kind": "button",
+      "refersTo": "browse",
+      "description": "Underlined entry to the full gallery; no separate filled primary button.",
+      "html": "<button class=\"ds-browse\" type=\"button\">Browse photos</button>",
+      "css": ".ds-browse{border:0;padding:.5rem 0;background:transparent;min-height:44px;text-decoration:underline;text-underline-offset:.25em;color:var(--ink,#1b392d);font:1rem/1.6 system-ui,sans-serif;cursor:pointer}.ds-browse:hover{text-decoration:underline}.ds-browse:focus-visible{outline:2px solid var(--focus,#294f3d);outline-offset:5px}"
+    },
+    {
+      "name": "Viewer previous control",
+      "kind": "button",
+      "refersTo": "viewer-control",
+      "description": "Circular 44px control; next and close use the same treatment.",
+      "html": "<button class=\"ds-icon-button\" type=\"button\" aria-label=\"Previous photo\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"m14 5-7 7 7 7\"/></svg></button>",
+      "css": ".ds-icon-button{border:0;padding:.6rem;background:transparent;width:44px;height:44px;display:grid;place-items:center;border-radius:50%;color:var(--ink,#1b392d);cursor:pointer}.ds-icon-button:hover{background:#dce6d6}.ds-icon-button:focus-visible{outline:2px solid var(--focus,#294f3d);outline-offset:5px}.ds-icon-button svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}"
+    },
+    {
+      "name": "Photo frame",
+      "kind": "card",
+      "refersTo": "photo",
+      "description": "Frame-only specimen; production uses original user images at their saved aspect ratio.",
+      "html": "<button class=\"ds-photo\" type=\"button\" aria-label=\"Photo frame specimen\"><span>Natural photo proportions</span></button>",
+      "css": ".ds-photo{width:240px;max-width:100%;aspect-ratio:4/3;padding:0;border:0;border-radius:12px;background:#dbe4d7;color:var(--ink,#1b392d);box-shadow:0 10px 26px -16px rgba(27,57,45,.35);overflow:hidden;transition:box-shadow 220ms ease;cursor:pointer}.ds-photo:hover{box-shadow:0 18px 35px -15px rgba(27,57,45,.4)}.ds-photo:focus-visible{outline:2px solid var(--focus,#294f3d);outline-offset:4px}.ds-photo span{font: .85rem system-ui,sans-serif}@media(max-width:46rem){.ds-photo{border-radius:10px}}@media(prefers-reduced-motion:reduce){.ds-photo{transition:none}}"
+    },
+    {
+      "name": "Viewer caption",
+      "kind": "custom",
+      "refersTo": "viewer-caption",
+      "description": "Saved caption, optional date, and live position count; text is illustrative.",
+      "html": "<div class=\"ds-caption-group\"><p class=\"ds-caption\">Photo caption<time class=\"ds-date\" datetime=\"2026-11-24\">November 24, 2026</time></p><p class=\"ds-count\">1 of 7</p></div>",
+      "css": ".ds-caption-group{color:var(--ink,#1b392d)}.ds-caption{margin:0;font:400 1.4rem/1.35 Georgia,serif}.ds-date{display:block;color:var(--muted,#526a58);font:400 .85rem/1.4 system-ui,sans-serif;margin-top:.5rem}.ds-count{font:.8rem/1.6 system-ui,sans-serif;color:var(--muted,#526a58);margin:.5rem 0 0;font-variant-numeric:tabular-nums}@media(max-width:46rem){.ds-caption{font-size:1.2rem}}"
+    }
+  ],
+  "narrative": {
+    "northStar": "A field of personal photographs around steady text",
+    "overview": "The sage ground, evergreen ink, large two-line Georgia name, and minimal contact navigation are the established identity. William's photographs supply color and depth; supporting interface elements stay quiet. The approved photo field now carries this identity on the production homepage, continuing around the bio as the visitor scrolls.\n\nThis records the user's approved adoption of the existing-world extension as the durable homepage system. The implementation is code-led and follows the locked composition; no new visual selection workflow is required. Route-specific composition and approval live in `.impeccable/surfaces/homepage.md`; product facts remain in `PRODUCT.md`.",
+    "keyCharacteristics": [
+      "Natural photographic proportions and level edges.",
+      "A calm, readable center surrounded by distributed imagery.",
+      "Restrained green interface colors, Georgia expression, and system sans utility text.",
+      "Quiet motion with accessible static and keyboard paths."
+    ],
+    "rules": [
+      {
+        "name": "Original Color",
+        "body": "Keep photographs in their own colors; interface palette changes must not recolor the images.",
+        "section": "colors"
+      },
+      {
+        "name": "Steady Center",
+        "body": "Photographs recede around measured reading zones; text does not move to accommodate them.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** preserve the sage and evergreen identity, Georgia name, original photo colors, and contact logos.",
+      "**Do** preserve natural photo proportions, the portrait height cap, and the seven-slot limit.",
+      "**Do** maintain visible focus, keyboard browsing, reduced motion, hidden-document suspension, and optional dates.",
+      "**Do** derive the local saved preview from production source and keep gallery edge cases working."
+    ],
+    "donts": [
+      "**Don't** add a navigation divider or a visible pause-photos control.",
+      "**Don't** add embedded metadata to the user's photographs; keep any provenance outside the image files.",
+      "**Don't** substitute a new visual direction for the approved photo field or make text drift with the photographs.",
+      "**Don't** duplicate gallery data or pile additional photos onto occupied field slots."
+    ]
+  }
+}

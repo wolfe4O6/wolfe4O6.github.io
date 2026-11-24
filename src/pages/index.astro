@@ -1,379 +1,333 @@
 ---
 import gallery from '../data/gallery.json';
 
-function displayDate(value: string) {
-  return new Intl.DateTimeFormat('en-US', {
-    month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC'
-  }).format(new Date(value + 'T00:00:00Z'));
-}
+// Keep small galleries around the readable center rather than above it.
+const slots = gallery.length >= 7 ? [0, 1, 2, 3, 4, 5, 6]
+  : gallery.length === 3 ? [2, 3, 5]
+  : [2, 3, 1, 4, 5, 6].slice(0, gallery.length);
 ---
 <!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#edf2e8">
   <meta name="description" content="William Kearns’s personal website in Missoula, Montana.">
   <title>William Kearns · Missoula, Montana</title>
+  <link rel="canonical" href="https://williamkearns.org/">
   <style is:global>
-    :root { --bar-height: calc(4rem + env(safe-area-inset-top)); color-scheme: light; background: #edf2e8; color: #1b392d; }
-    * { box-sizing: border-box; }
-    body { margin: 0; font: 1rem/1.6 system-ui, sans-serif; }
-    main.text-only { grid-template-columns: minmax(0, 1fr); }
-    main.text-only .copy { max-width: 50rem; }
-    .photos[hidden] { display: none; }
-    main { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
-    .copy { padding: clamp(3rem, 8vh, 6rem) clamp(1.5rem, 6vw, 5.5rem) 4rem; }
-    h1 {
-      margin: 0; font: 500 clamp(3.6rem, 10vw, 8.25rem)/.98 Georgia, serif;
-      letter-spacing: -.065em; text-wrap: balance;
+    :root { color-scheme:light; --ground:#edf2e8; --ink:#1b392d; --muted:#526a58; --focus:#294f3d;
+      background:var(--ground); color:var(--ink); scrollbar-color:#8ba18b var(--ground); }
+    * { box-sizing:border-box; }
+    html { scroll-behavior:smooth; scroll-padding-top:6rem; }
+    body { margin:0; font:1rem/1.6 system-ui,sans-serif; overflow-x:clip; }
+    ::selection { background:#b8ceb6; color:var(--ink); }
+    a { color:inherit; text-underline-offset:.25em; }
+    button { color:inherit; font:inherit; cursor:pointer; }
+    a:focus-visible,button:focus-visible { outline:2px solid var(--focus); outline-offset:5px; }
+    .skip { position:fixed; top:1rem; left:1rem; z-index:20; background:var(--ground); padding:.6rem 1rem; transform:translateY(-200%); }
+    .skip:focus { transform:none; }
+    .contact-links { position:fixed; top:0; left:0; right:0; z-index:5; display:flex; align-items:center;
+      justify-content:flex-end; gap:1.7rem; height:5rem; padding:env(safe-area-inset-top) 2.5rem 0;
+      background:var(--ground); }
+    .contact-links a { display:inline-flex; align-items:center; gap:.5rem; min-height:44px; font-size:.95rem; text-decoration:none; }
+    .contact-links a:hover { text-decoration:underline; }
+    .contact-links .about-nav { margin-right:auto; }
+    .contact-links svg { width:1.15rem; height:1.15rem; }
+    .photo-field { position:fixed; inset:0; overflow:clip; z-index:0; }
+    .float-photo { position:absolute; left:var(--x); top:var(--y); width:min(var(--width),calc(65svh * var(--ratio))); height:auto;
+      aspect-ratio:var(--ratio); padding:0; border:0; border-radius:12px; background:#dbe4d7;
+      box-shadow:0 10px 26px -16px rgba(27,57,45,.35); overflow:hidden;
+      transition:box-shadow 220ms ease; touch-action:pan-y; }
+    .float-photo:hover { box-shadow:0 18px 35px -15px rgba(27,57,45,.4); }
+    .float-photo:focus-visible { z-index:4; outline-offset:4px; }
+    .float-photo img { width:100%; height:auto; display:block; }
+    .float-photo[data-slot="0"] { --x:30%; --y:-8%; --width:25vw; }
+    .float-photo[data-slot="1"] { --x:3%; --y:50%; --width:22vw; }
+    .float-photo[data-slot="2"] { --x:-4%; --y:14%; --width:28vw; }
+    .float-photo[data-slot="3"] { --x:79%; --y:12%; --width:27vw; }
+    .float-photo[data-slot="4"] { --x:80%; --y:53%; --width:25vw; }
+    .float-photo[data-slot="5"] { --x:55%; --y:84%; --width:30vw; }
+    .float-photo[data-slot="6"] { --x:6%; --y:84%; --width:18vw; }
+    [hidden] { display:none !important; }
+    main { position:relative; z-index:1; pointer-events:none; }
+    .hero { min-height:100svh; display:grid; place-items:center; padding:8rem 1.5rem 9rem; }
+    .identity { width:min(100%,36rem); text-align:center; pointer-events:auto; }
+    h1 { margin:0; font:400 clamp(4.6rem,8.7vw,8.25rem)/.96 Georgia,serif; letter-spacing:-.04em; text-wrap:balance; }
+    h1 span { display:block; }
+    .intro { max-width:28rem; margin:2rem auto 0; font:400 clamp(1.2rem,1.7vw,1.5rem)/1.45 Georgia,serif; text-wrap:pretty; }
+    .hero-footer { position:absolute; top:calc(100svh - 5rem); left:2.5rem; right:2.5rem;
+      display:flex; align-items:center; justify-content:center; gap:1rem; pointer-events:none; }
+    .hero-footer a,.hero-footer button { pointer-events:auto; }
+    .about-link { display:inline-flex; align-items:center; gap:.6rem; text-decoration:none; min-height:44px; }
+    .about-link:hover { text-decoration:underline; }
+    .about-link svg { width:15px; height:15px; }
+    .browse { border:0; padding:.5rem 0; background:transparent; min-height:44px; text-decoration:underline; text-underline-offset:.25em; }
+    .about { min-height:100svh; display:grid; place-items:center; padding:8rem 1.5rem 10rem; }
+    .about-copy { width:min(100%,34rem); pointer-events:auto; }
+    h2 { margin:0 0 2rem; font:400 clamp(2.7rem,4vw,3.8rem)/1.1 Georgia,serif; letter-spacing:-.03em; text-wrap:balance; }
+    .about p { margin:1.4rem 0 0; font-size:clamp(1.05rem,1.35vw,1.15rem); }
+    .about .outro { margin-top:2rem; font-family:Georgia,serif; font-size:1.5rem; line-height:1.4; }
+    .page-footer { position:relative; z-index:1; text-align:center; padding:0 1.5rem 2rem; font-size:.85rem; color:var(--muted); }
+    .page-footer a { display:inline-block; min-height:44px; padding:.5rem; }
+    .viewer { width:min(90vw,74rem); max-width:none; max-height:94svh; padding:0; border:0;
+      overflow:visible; background:transparent; color:var(--ink); }
+    .viewer::backdrop { background:rgba(237,242,232,.92); backdrop-filter:blur(14px); }
+    .viewer-inner { display:flex; flex-direction:column; align-items:center; }
+    .viewer-image { display:block; max-width:100%; max-height:72svh; width:auto; height:auto; border-radius:12px; }
+    .viewer-bottom { display:flex; align-items:flex-start; gap:2rem; justify-content:space-between; width:min(100%,50rem); margin:1.5rem auto 0; }
+    .caption { margin:0; font:400 1.4rem/1.35 Georgia,serif; }
+    .date { display:block; color:var(--muted); font:400 .85rem/1.4 system-ui,sans-serif; margin-top:.5rem; }
+    .viewer-controls { display:flex; gap:.7rem; flex:none; }
+    .icon-button { border:0; padding:.6rem; background:transparent; width:44px; height:44px; display:grid; place-items:center; border-radius:50%; }
+    .icon-button:hover { background:#dce6d6; }
+    .icon-button svg { width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; }
+    .viewer-close { position:fixed; top:1rem; right:1.5rem; }
+    .count { font-size:.8rem; color:var(--muted); margin:.5rem 0 0; font-variant-numeric:tabular-nums; }
+    @media (max-width:46rem) {
+      .contact-links { height:4.5rem; gap:1.2rem; padding-left:1.25rem; padding-right:1.25rem; }
+      .contact-links a { font-size:.9rem; }
+      .hero { padding:10rem 1.6rem 10rem; min-height:100svh; }
+      h1 { font-size:clamp(4.3rem,18vw,6.5rem); line-height:.97; }
+      .identity { width:min(100%,25rem); }
+      .intro { width:min(100%,20rem); margin-top:1.5rem; font-size:1.18rem; }
+      .hero-footer { left:1.5rem; right:1.5rem; top:calc(100svh - 4.5rem); font-size:.8rem; }
+      .float-photo { border-radius:10px; }
+      .float-photo[data-slot="0"] { --x:27%; --y:8%; --width:47vw; }
+      .float-photo[data-slot="1"] { --x:-18%; --y:66%; --width:48vw; }
+      .float-photo[data-slot="2"] { --x:-15%; --y:18%; --width:53vw; }
+      .float-photo[data-slot="3"] { --x:78%; --y:20%; --width:47vw; }
+      .float-photo[data-slot="4"] { --x:78%; --y:66%; --width:50vw; }
+      .float-photo[data-slot="5"] { --x:65%; --y:82%; --width:62vw; }
+      .float-photo[data-slot="6"] { --x:-9%; --y:85%; --width:38vw; }
+      .about { padding:6rem 2rem 8rem; }
+      .about-copy { width:min(100%,28rem); }
+      h2 { font-size:2.6rem; margin-bottom:1.5rem; }
+      .about p { font-size:1.025rem; line-height:1.65; }
+      .viewer { width:88vw; max-height:90svh; }
+      .viewer-image { max-height:65svh; }
+      .viewer-bottom { gap:1rem; margin-top:1.2rem; }
+      .caption { font-size:1.2rem; }
+      .viewer-controls { gap:.1rem; }
+      .viewer-close { top:.75rem; right:.75rem; }
     }
-    h1 span { display: block; }
-    .about { max-width: 39rem; margin-top: clamp(2.5rem, 5vw, 4rem); }
-    p { margin: 1.25rem 0 0; font-size: clamp(1.05rem, 1.6vw, 1.23rem); }
-    .contact-links {
-      position: sticky; top: 0; z-index: 5; height: var(--bar-height);
-      display: flex; align-items: center; justify-content: flex-end; gap: 1.5rem;
-      padding: calc(.5rem + env(safe-area-inset-top)) clamp(1.5rem, 2.5vw, 3rem) .5rem;
-      background: rgba(237, 242, 232, .9);
-      -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
-      font-size: .95rem;
+    @media (prefers-reduced-motion:reduce) {
+      html { scroll-behavior:auto; }
+      *,*::before,*::after { transition-duration:0s !important; }
     }
-    .contact-links a {
-      display: inline-flex; align-items: center; gap: .5rem; min-height: 2.75rem;
-      color: inherit; text-decoration: none; text-underline-offset: .25em;
-    }
-    .contact-links a:hover { text-decoration: underline; }
-    .contact-links a:focus-visible { outline: 2px solid currentColor; outline-offset: 4px; }
-    .contact-links svg { width: 1.15rem; height: 1.15rem; flex: none; }
-    .intro {
-      margin: 0 0 2rem; font: 400 clamp(1.5rem, 2.5vw, 2rem)/1.35 Georgia, serif;
-      letter-spacing: -.02em;
-    }
-    .photos {
-      --photo-gutter: clamp(1rem, 2.5vw, 3rem);
-      position: sticky; top: var(--bar-height); align-self: start; min-width: 0;
-      height: calc(100vh - var(--bar-height)); height: calc(100svh - var(--bar-height)); padding-right: var(--photo-gutter);
-    }
-    .photo-scroll {
-      height: 100%; overflow-y: auto;
-      -webkit-mask-image: linear-gradient(transparent, black 10%, black 90%, transparent);
-      mask-image: linear-gradient(transparent, black 10%, black 90%, transparent);
-    }
-    .photo-scroll:focus-visible { outline: 2px solid #496653; outline-offset: -3px; }
-    .photo-group { display: grid; justify-items: center; gap: 1.25rem; padding-bottom: 1.25rem; }
-    .photo-scroll img { display: block; width: 100%; height: auto; border-radius: .75rem; }
-    .photo {
-      position: relative; display: block; width: min(100%, calc((100svh - var(--bar-height) - 6rem) * var(--photo-ratio))); padding: 0; border: 0;
-      border-radius: .75rem; background: transparent; color: white;
-      text-align: left; font: inherit; cursor: pointer; overflow: hidden;
-    }
-    .photo:focus-visible { outline: 3px solid #1b392d; outline-offset: -3px; }
-    .photo-caption {
-      position: absolute; inset: auto 0 0; padding: 2.5rem 1.25rem 1.25rem;
-      background: linear-gradient(transparent, rgba(12, 35, 25, .94));
-      font-size: clamp(.95rem, 1.4vw, 1.15rem); line-height: 1.4;
-    }
-    .photo-caption[hidden] { display: none; }
-    .photo-caption time { display: block; margin-top: .4rem; font-size: .8rem; opacity: .85; }
-    .photos.is-ready .photo-scroll { overflow: clip; touch-action: pan-x; }
-    .photos.is-ready .photo-track { will-change: transform; }
-    .photos::before, .photos::after {
-      content: ""; position: absolute; z-index: 1; pointer-events: none;
-      left: 0; right: var(--photo-gutter); height: clamp(4rem, 10vh, 7rem);
-      -webkit-backdrop-filter: blur(7px); backdrop-filter: blur(7px);
-    }
-    .photos::before {
-      top: 0; background: linear-gradient(#edf2e8, transparent);
-      -webkit-mask-image: linear-gradient(black, transparent);
-      mask-image: linear-gradient(black, transparent);
-    }
-    .photos::after {
-      bottom: 0; background: linear-gradient(transparent, #edf2e8);
-      -webkit-mask-image: linear-gradient(transparent, black);
-      mask-image: linear-gradient(transparent, black);
-    }
-    @media (max-width: 46rem) {
-      main { display: flex; flex-direction: column; }
-      .copy { display: contents; }
-      .identity { order: 0; padding: 2rem 1.5rem; }
-      .photos {
-        --photo-gutter: 0px;
-        --strip-height: clamp(12rem, calc((100vw - 3rem) * .5626), 22rem);
-        order: 1; position: relative; top: 0; height: auto;
-        width: 100%; padding: 0 1.5rem;
-      }
-      .photo-scroll {
-        height: var(--strip-height); overflow-x: auto; overflow-y: hidden;
-        -webkit-mask-image: linear-gradient(to right, transparent, black 6%, black 94%, transparent);
-        mask-image: linear-gradient(to right, transparent, black 6%, black 94%, transparent);
-      }
-      .photo-track { display: flex; width: max-content; height: 100%; }
-      .photo-group { display: flex; flex: none; height: 100%; gap: 1rem; padding: 0 1rem 0 0; }
-      .photo { flex: none; width: calc(var(--strip-height) * var(--photo-ratio)); height: 100%; }
-      .photo img { height: 100%; object-fit: contain; }
-      .photos.is-ready .photo-scroll { touch-action: pan-y; }
-      .photos::before, .photos::after {
-        top: 0; bottom: 0; width: clamp(1.5rem, 6vw, 3rem); height: 100%;
-      }
-      .photos::before {
-        left: 1.5rem; right: auto;
-        background: linear-gradient(to right, #edf2e8, transparent);
-        -webkit-mask-image: linear-gradient(to right, black, transparent);
-        mask-image: linear-gradient(to right, black, transparent);
-      }
-      .photos::after {
-        right: 1.5rem; left: auto;
-        background: linear-gradient(to right, transparent, #edf2e8);
-        -webkit-mask-image: linear-gradient(to right, transparent, black);
-        mask-image: linear-gradient(to right, transparent, black);
-      }
-      .about { order: 2; margin: 2rem 1.5rem 3rem; }
-    }
-    @media (prefers-reduced-motion: reduce) {
-      .photos.is-ready .photo-track { transform: none !important; will-change: auto; }
-      .photos.is-ready .photo-scroll { overflow: auto; touch-action: auto; }
-      .photo-group[aria-hidden="true"] { display: none; }
-    }
+    body:has(.viewer[open]) { overflow:hidden; }
+    @media (scripting:none) { .float-photo { opacity:.55; } .identity,.about-copy { background:var(--ground); } .browse { display:none; } }
   </style>
 </head>
-<body>
-  <nav class="contact-links" aria-label="Contact links">
+<body id="top">
+  <a class="skip" href="#about">Skip to about me</a>
+  <nav class="contact-links" aria-label="Navigation">
+    <a class="about-nav" href="#about">About</a>
     <a href="https://github.com/wolfe4O6"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg><span>GitHub</span></a>
     <a href="mailto:wk@williamkearns.org"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg><span>Email</span></a>
   </nav>
+  <div class="photo-field" aria-label="Personal photographs" hidden={!gallery.length}>
+    <!-- GALLERY_START -->
+    {gallery.slice(0, 7).map((photo, index) => (
+      <button class="float-photo" type="button" tabindex="-1" data-index={index} data-slot={slots[index]}
+        aria-label={`View photo: ${photo.caption || photo.alt}`}
+        style={`--ratio:${photo.width / photo.height}`}>
+        <img src={photo.src} width={photo.width} height={photo.height} alt={photo.alt} decoding="async" />
+      </button>
+    ))}
+    <!-- GALLERY_END -->
+  </div>
   <main class={gallery.length ? undefined : "text-only"}>
-    <div class="copy">
-      <div class="identity">
-        <h1><span>William</span> <span>Kearns</span></h1>
-      </div>
-      <div class="about">
+    <section class="hero" aria-labelledby="name">
+      <div class="identity reading-zone">
+        <h1 id="name"><span>William</span><span>Kearns</span></h1>
         <p class="intro">I live in Missoula, Montana. I love long days in the woods and late nights making music with friends.</p>
-        <p>I’m into backpacking, camping, and traveling. I also like old computers, retro tech, and figuring out how things work. I care about the right to repair and being able to build and fix things yourself.</p>
-        <p>I play guitar, enjoy DJ sets, and like getting friends together for gaming. Creativity, kindness, and making the most of what you have matter to me.</p>
       </div>
-    </div>
-    <div class="photos" hidden={!gallery.length}>
-      <div class="photo-scroll" role="region" aria-label="Personal photos. Scroll or drag to browse. Click a photo for its caption." tabindex="0">
-        <div class="photo-track">
-          <div class="photo-group">
-            <!-- GALLERY_START -->
-            {gallery.map((photo) => (
-              <button class="photo" type="button" aria-expanded="false" data-photo-id={photo.id}
-                style={`--photo-ratio: ${photo.width / photo.height}`}>
-                <img src={photo.src} width={photo.width} height={photo.height} alt={photo.alt} />
-                <span class="photo-caption" hidden>
-                  <span>{photo.caption}</span>
-                  {photo.date && <time datetime={photo.date}>{displayDate(photo.date)}</time>}
-                </span>
-              </button>
-            ))}
-            <!-- GALLERY_END -->
-          </div>
+      <div class="hero-footer">
+        <button class="browse" type="button" hidden={!gallery.length}>Browse photos</button>
+      </div>
+    </section>
+    <section class="about" id="about" aria-labelledby="about-heading">
+      <div class="about-copy reading-zone">
+        <h2 id="about-heading">A little about me.</h2>
+        <p>I’m into backpacking, camping, and traveling. I also like old computers, retro tech, and figuring out how things work.</p>
+        <p>I care about the right to repair and being able to build and fix things yourself.</p>
+        <p>I play guitar, enjoy DJ sets, and like getting friends together for gaming.</p>
+        <p class="outro">Creativity, kindness, and making the most of what you have matter to me.</p>
+      </div>
+    </section>
+  </main>
+  <footer class="page-footer"><a href="#top">Back to the top</a></footer>
+  <dialog class="viewer" aria-label="Photo viewer" aria-describedby="photo-caption">
+    <button class="icon-button viewer-close" aria-label="Close photo" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M6 18 18 6"/></svg></button>
+    <div class="viewer-inner">
+      <!-- VIEWER_IMAGE_START -->
+      <img class="viewer-image" src={gallery[0]?.src} alt={gallery[0]?.alt || ''} />
+      <!-- VIEWER_IMAGE_END -->
+      <div class="viewer-bottom">
+        <div><p class="caption" id="photo-caption"></p><p class="count" aria-live="polite"></p></div>
+        <div class="viewer-controls">
+          <button class="icon-button previous" type="button" aria-label="Previous photo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 5-7 7 7 7"/></svg></button>
+          <button class="icon-button next" type="button" aria-label="Next photo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m10 5 7 7-7 7"/></svg></button>
         </div>
       </div>
     </div>
-  </main>
+  </dialog>
+  <!-- GALLERY_DATA_START -->
+  <script is:inline type="application/json" id="gallery-data" set:html={JSON.stringify(gallery).replaceAll('<', '\\u003c')}></script>
+  <!-- GALLERY_DATA_END -->
   <script is:inline>
-    const photos = document.querySelector('.photos');
-    const viewport = photos.querySelector('.photo-scroll');
-    const track = photos.querySelector('.photo-track');
-    const group = track.querySelector('.photo-group');
-    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const mobileLayout = window.matchMedia('(max-width: 46rem)');
-    let loopSize = 0;
-    let position = 0;
-    let extraSpeed = 0;
-    let lastFrame = 0;
-    let focused = false;
-    let drag = null;
-    let selectedPhoto = null;
-    let suppressClick = false;
+    (() => {
+      const gallery = JSON.parse(document.querySelector('#gallery-data').textContent);
+      if (!gallery.length) return;
+      const field = document.querySelector('.photo-field');
+      const photos = [...field.querySelectorAll('.float-photo')];
+      const zones = [...document.querySelectorAll('.reading-zone,.contact-links a,.hero-footer a,.hero-footer button,.page-footer a')];
+      const viewer = document.querySelector('.viewer');
+      const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+      const narrow = matchMedia('(max-width:46rem)');
+      const viewerImage = viewer.querySelector('.viewer-image');
+      const caption = viewer.querySelector('.caption');
+      const count = viewer.querySelector('.count');
+      let selected = 0, hover = false, focused = false;
+      let clock = 0, previousTime = 0, frame = 0, velocity = 0;
+      let positions = [], zoneRects = [], viewHeight = innerHeight;
+      let scrollOffset = scrollY, scrollTarget = scrollY;
+      const speeds = [5.3, 7, 4.4, 6.2, 8.1, 5.7, 4.8];
+      let nextPhoto = photos.length, nextSlot = 0, nextSwap = 14, swap = null;
 
-    const copies = [];
-    function updateCopies() {
-      const viewportSize = mobileLayout.matches ? viewport.clientWidth : viewport.clientHeight;
-      const required = loopSize ? Math.ceil(viewportSize / loopSize) : 0;
-      while (copies.length < required) {
-        const copy = group.cloneNode(true);
-        copy.setAttribute('aria-hidden', 'true');
-        copy.querySelectorAll('button').forEach(button => { button.tabIndex = -1; });
-        track.append(copy);
-        copies.push(copy);
+      function measurePhoto(photo) {
+        return { x:photo.offsetLeft, y:photo.offsetTop, w:photo.offsetWidth,
+          h:photo.offsetWidth / Number(photo.style.getPropertyValue('--ratio')) };
       }
-      while (copies.length > required) copies.pop().remove();
-    }
+      // Keep the approved seven-photo composition as a window onto any size
+      // gallery. Extra photos enter one at a time, without stacking on a slot.
+      function advanceGallery() {
+        if (gallery.length <= photos.length || swap || clock < nextSwap) return;
+        const active = new Set(photos.map(photo => Number(photo.dataset.index)));
+        while (active.has(nextPhoto)) nextPhoto = (nextPhoto+1) % gallery.length;
+        const index = nextPhoto;
+        const slot = nextSlot++ % photos.length;
+        nextPhoto = (index+1) % gallery.length;
+        swap = { slot, index, ready:false, started:0, switched:false };
+        const loading = swap;
+        const image = new Image();
+        image.onload = () => {
+          if (swap === loading) { loading.ready = true; loading.started = clock; }
+        };
+        image.onerror = () => { if (swap === loading) { swap = null; nextSwap = clock+14; } };
+        image.src = gallery[index].src;
+      }
+      function swapOpacity(slot) {
+        if (!swap || !swap.ready || swap.slot !== slot) return 1;
+        const elapsed = clock-swap.started;
+        if (elapsed < .35) return Math.max(0,1-elapsed/.35);
+        if (!swap.switched) {
+          swap.switched = true;
+          const photo = gallery[swap.index], button = photos[slot], image = button.querySelector('img');
+          button.dataset.index = String(swap.index);
+          button.setAttribute('aria-label','View photo: '+(photo.caption || photo.alt));
+          button.style.setProperty('--ratio',String(photo.width/photo.height));
+          image.src = photo.src; image.alt = photo.alt;
+          image.width = photo.width; image.height = photo.height;
+          positions[slot] = measurePhoto(button);
+        }
+        if (elapsed < .7) return Math.min(1,(elapsed-.35)/.35);
+        swap = null; nextSwap = clock+14;
+        return 1;
+      }
 
-    function renderPosition() {
-      if (!loopSize) return;
-      // Wrapping in either direction keeps the two identical groups seamless.
-      position = ((position % loopSize) + loopSize) % loopSize;
-      const direction = mobileLayout.matches ? 'translateX' : 'translateY';
-      track.style.transform = direction + '(' + (-position) + 'px)';
-    }
-
-    function updateLoopSize() {
-      const bounds = group.getBoundingClientRect();
-      const nextSize = mobileLayout.matches ? bounds.width : bounds.height;
-      if (loopSize) position *= nextSize / loopSize;
-      loopSize = nextSize;
-      updateCopies();
-      renderPosition();
-    }
-    new ResizeObserver(updateLoopSize).observe(group);
-
-    mobileLayout.addEventListener('change', () => {
-      closeCaption();
-      extraSpeed = 0;
-      drag = null;
-      viewport.scrollTop = 0;
-      viewport.scrollLeft = 0;
-      updateLoopSize();
-    });
-
-    viewport.addEventListener('wheel', event => {
-      if (reducedMotion.matches || event.ctrlKey || !event.cancelable) return;
-      const viewportSize = mobileLayout.matches ? viewport.clientWidth : viewport.clientHeight;
-      const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? viewportSize : 1;
-      const delta = mobileLayout.matches && Math.abs(event.deltaX) > Math.abs(event.deltaY)
-        ? event.deltaX : event.deltaY;
-      const distance = delta * unit;
-      if (!distance) return;
-      event.preventDefault();
-      closeCaption();
-      position += distance * 0.5;
-      extraSpeed = Math.max(-1800, Math.min(1800, extraSpeed + distance * 6));
-      renderPosition();
-    }, { passive: false });
-
-    function setCaption(button, open) {
-      track.querySelectorAll('.photo').forEach(photo => {
-        if (photo.dataset.photoId !== button.dataset.photoId) return;
-        photo.setAttribute('aria-expanded', String(open));
-        photo.querySelector('.photo-caption').hidden = !open;
+      function measure() {
+        viewHeight = innerHeight;
+        positions = photos.map(measurePhoto);
+        readZones();
+        render();
+      }
+      function readZones() { zoneRects = zones.map(zone => zone.getBoundingClientRect()); }
+      const wrap = (value, length) => ((value % length) + length) % length;
+      function render() {
+        positions.forEach((p, i) => {
+          const photo = photos[i];
+          const distance = clock * speeds[i % speeds.length] + scrollOffset * (.18 + (i % 3) * .07);
+          const y = narrow.matches
+            ? p.y + (reduced.matches ? 0 : Math.sin(clock*.055+i*1.4)*12) - scrollOffset*.025
+            : wrap(p.y - distance + p.h + 60, viewHeight + p.h + 120) - p.h - 60;
+          const x = p.x + (reduced.matches ? 0 : Math.sin(clock * .065 + i * 1.7) * (narrow.matches ? 9 : 18));
+          // A photograph gently recedes when it passes the reading area.
+          let nearText = 0;
+          zoneRects.forEach(r => {
+            const overlapX = Math.max(0, Math.min(x+p.w, r.right+24) - Math.max(x,r.left-24));
+            const overlapY = Math.max(0, Math.min(y+p.h,r.bottom+24) - Math.max(y,r.top-24));
+            nearText = Math.max(nearText, Math.min(1, overlapX / Math.min(p.w,80)) * Math.min(1,overlapY / Math.min(p.h,80)));
+          });
+          const edge = Math.min(1, Math.max(0,(y+p.h)/65), Math.max(0,(viewHeight-y)/65));
+          photo.style.transform = `translate3d(${x-p.x}px,${y-p.y}px,0)`;
+          photo.style.opacity = String((1 - nearText) * edge * swapOpacity(i));
+          photo.style.filter = nearText > .04 ? `blur(${(nearText*3).toFixed(2)}px)` : 'none';
+        });
+      }
+      function tick(now) {
+        const dt = previousTime ? Math.min((now-previousTime)/1000,.05) : 0;
+        previousTime = now;
+        if (!viewer.open && !hover && !focused) {
+          clock += dt * (1 + velocity);
+          velocity *= Math.exp(-dt*3.5);
+          scrollOffset += (scrollTarget-scrollOffset) * Math.min(1,dt*8);
+          advanceGallery();
+          render();
+        }
+        frame = requestAnimationFrame(tick);
+      }
+      function run() {
+        cancelAnimationFrame(frame); previousTime = 0;
+        if (!reduced.matches && !document.hidden) frame = requestAnimationFrame(tick);
+        else { velocity = 0; scrollOffset = scrollTarget; render(); }
+      }
+      function showPhoto(index) {
+        selected = wrap(index,gallery.length);
+        const photo = gallery[selected];
+        viewerImage.src = photo.src; viewerImage.alt = photo.alt;
+        viewerImage.width = photo.width; viewerImage.height = photo.height;
+        caption.replaceChildren(document.createTextNode(photo.caption || photo.alt));
+        if (photo.date) {
+          const date = document.createElement('time'); date.className = 'date'; date.dateTime = photo.date;
+          date.textContent = new Intl.DateTimeFormat('en-US',{month:'long',day:'numeric',year:'numeric',timeZone:'UTC'}).format(new Date(photo.date+'T00:00:00Z'));
+          caption.append(date);
+        }
+        count.textContent = `${selected+1} of ${gallery.length}`;
+        if (!viewer.open) viewer.showModal();
+      }
+      photos.forEach(photo => {
+        photo.addEventListener('click',() => showPhoto(Number(photo.dataset.index)));
+        photo.addEventListener('pointerenter',event => { if(event.pointerType === 'mouse') hover = true; });
+        photo.addEventListener('pointerleave',() => { hover = false; });
+        photo.addEventListener('focus',() => { focused = photo.matches(':focus-visible'); });
+        photo.addEventListener('blur',() => { focused = false; });
       });
-    }
-    function closeCaption() {
-      if (!selectedPhoto) return;
-      setCaption(selectedPhoto, false);
-      selectedPhoto = null;
-    }
-
-    track.addEventListener('click', event => {
-      if (suppressClick) {
-        suppressClick = false;
-        return;
-      }
-      const button = event.target.closest('.photo');
-      if (!button) return;
-      const wasOpen = selectedPhoto === button;
-      closeCaption();
-      if (wasOpen) return;
-      selectedPhoto = button;
-      setCaption(button, true);
-      extraSpeed = 0;
-      // Bring the selected photo clear of the faded edges before pausing.
-      const bounds = button.getBoundingClientRect();
-      const visible = viewport.getBoundingClientRect();
-      const start = mobileLayout.matches ? bounds.left : bounds.top;
-      const end = mobileLayout.matches ? bounds.right : bounds.bottom;
-      const visibleStart = mobileLayout.matches ? visible.left : visible.top;
-      const visibleEnd = mobileLayout.matches ? visible.right : visible.bottom;
-      if (start < visibleStart + 24) position += start - visibleStart - 24;
-      else if (end > visibleEnd - 24) position += end - visibleEnd + 24;
-      renderPosition();
-    });
-    document.addEventListener('click', event => {
-      if (!event.target.closest('.photo')) closeCaption();
-    });
-    document.addEventListener('keydown', event => {
-      if (event.key === 'Escape') closeCaption();
-    });
-
-    viewport.addEventListener('focusin', event => {
-      focused = event.target.matches(':focus-visible');
-      const button = event.target.closest('.photo');
-      if (!focused || !button || reducedMotion.matches) return;
-      viewport.scrollTop = 0;
-      viewport.scrollLeft = 0;
-      const buttonBounds = button.getBoundingClientRect();
-      const viewportBounds = viewport.getBoundingClientRect();
-      const offset = mobileLayout.matches
-        ? buttonBounds.left - viewportBounds.left : buttonBounds.top - viewportBounds.top;
-      position = Math.max(0, position + offset - 24);
-      extraSpeed = 0;
-      renderPosition();
-    });
-    viewport.addEventListener('focusout', event => {
-      focused = viewport.contains(event.relatedTarget) &&
-        event.relatedTarget.matches(':focus-visible');
-    });
-    viewport.addEventListener('keydown', event => {
-      if (reducedMotion.matches || event.target.closest('.photo')) return;
-      const viewportSize = mobileLayout.matches ? viewport.clientWidth : viewport.clientHeight;
-      const steps = { PageDown: viewportSize * 0.8, PageUp: -viewportSize * 0.8,
-        ' ': viewportSize * 0.8 };
-      steps[mobileLayout.matches ? 'ArrowRight' : 'ArrowDown'] = 80;
-      steps[mobileLayout.matches ? 'ArrowLeft' : 'ArrowUp'] = -80;
-      if (!(event.key in steps) || event.ctrlKey || event.altKey || event.metaKey) return;
-      event.preventDefault();
-      position += steps[event.key] * (event.key === ' ' && event.shiftKey ? -1 : 1);
-      extraSpeed = 0;
-      renderPosition();
-    });
-
-    viewport.addEventListener('pointerdown', event => {
-      suppressClick = false;
-      if (reducedMotion.matches || event.pointerType === 'mouse' || !event.isPrimary) return;
-      const coordinate = mobileLayout.matches ? event.clientX : event.clientY;
-      drag = { id: event.pointerId, coordinate, startCoordinate: coordinate,
-        time: event.timeStamp, moving: false };
-      extraSpeed = 0;
-    });
-    viewport.addEventListener('pointermove', event => {
-      if (!drag || drag.id !== event.pointerId) return;
-      const coordinate = mobileLayout.matches ? event.clientX : event.clientY;
-      if (!drag.moving) {
-        if (Math.abs(drag.startCoordinate - coordinate) < 6) return;
-        drag.moving = true;
-        closeCaption();
-        viewport.setPointerCapture(event.pointerId);
-      }
-      const distance = drag.coordinate - coordinate;
-      position += distance;
-      extraSpeed = Math.max(-1800, Math.min(1800, distance * 1000 / Math.max(16, event.timeStamp - drag.time)));
-      drag.coordinate = coordinate;
-      drag.time = event.timeStamp;
-      renderPosition();
-    });
-    viewport.addEventListener('pointerup', () => {
-      suppressClick = Boolean(drag && drag.moving);
-      drag = null;
-    });
-    viewport.addEventListener('pointercancel', () => { drag = null; extraSpeed = 0; });
-
-    reducedMotion.addEventListener('change', () => {
-      extraSpeed = 0;
-      drag = null;
-      viewport.scrollTop = 0;
-      viewport.scrollLeft = 0;
-    });
-    document.addEventListener('visibilitychange', () => { lastFrame = 0; });
-
-    function animate(time) {
-      const elapsed = lastFrame ? Math.min((time - lastFrame) / 1000, 0.05) : 0;
-      lastFrame = time;
-      if (!reducedMotion.matches && !document.hidden && !drag && !selectedPhoto) {
-        const automaticSpeed = focused ? 0 : loopSize / 125;
-        position += (automaticSpeed + extraSpeed) * elapsed;
-        extraSpeed *= Math.exp(-2.5 * elapsed);
-        renderPosition();
-      }
-      requestAnimationFrame(animate);
-    }
-
-    photos.classList.add('is-ready');
-    requestAnimationFrame(animate);
+      document.querySelector('.browse').addEventListener('click',() => showPhoto(0));
+      viewer.querySelector('.viewer-close').addEventListener('click',() => viewer.close());
+      viewer.querySelector('.previous').addEventListener('click',() => showPhoto(selected-1));
+      viewer.querySelector('.next').addEventListener('click',() => showPhoto(selected+1));
+      viewer.addEventListener('keydown',event => {
+        if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') {
+          event.preventDefault(); showPhoto(selected+(event.key === 'ArrowRight' ? 1 : -1));
+        }
+      });
+      viewer.addEventListener('click',event => { if (event.target === viewer) viewer.close(); });
+      viewer.addEventListener('close',() => { hover = false; });
+      addEventListener('scroll',() => {
+        scrollTarget = scrollY; readZones();
+        if (reduced.matches) { scrollOffset=scrollTarget; render(); }
+      },{passive:true});
+      addEventListener('wheel',event => {
+        if (!event.ctrlKey && !viewer.open && !reduced.matches) velocity = Math.max(-18,Math.min(18,velocity+event.deltaY*.012));
+      },{passive:true});
+      addEventListener('resize',measure);
+      reduced.addEventListener('change',run);
+      narrow.addEventListener('change',measure);
+      document.addEventListener('visibilitychange',run);
+      measure(); run();
+    })();
   </script>
 </body>
 </html>
