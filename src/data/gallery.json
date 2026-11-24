@@ -51,7 +51,7 @@
     "height": 2268,
     "caption": "Fall is here.",
     "alt": "Golden and green trees cover a forested hillside, framed by tall evergreens beneath a cloudy sky.",
-    "date": ""
+    "date": "2026-10-25"
   },
   {
     "id": "img-7545-76df63b32978ab77",
@@ -72,15 +72,6 @@
     "date": ""
   },
   {
-    "id": "spring-stream-9bd09880a2f856e7",
-    "src": "/images/spring-stream-9bd09880a2f856e7.jpeg",
-    "width": 1330,
-    "height": 2364,
-    "caption": "Small signs of spring.",
-    "alt": "New green shoots emerge between wet rocks in a shallow stream.",
-    "date": ""
-  },
-  {
     "id": "ladybug-3daf1dd22cf3ab76",
     "src": "/images/crop-0a1fa36fb0c02f92.jpeg",
     "width": 1330,
@@ -88,5 +79,14 @@
     "caption": "Up close.",
     "alt": "A red and black ladybug rests on a fuzzy green plant.",
     "date": ""
+  },
+  {
+    "id": "img-4160-aba1a01c2704c0fd",
+    "src": "/images/img-4160-aba1a01c2704c0fd.jpeg",
+    "width": 5712,
+    "height": 4284,
+    "caption": "A summer day at the lake.",
+    "alt": "A small lake with trees surounding it.",
+    "date": "2026-07-31"
   }
 ]
