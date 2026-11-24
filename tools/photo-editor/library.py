@@ -7,6 +7,7 @@ import base64
 import fcntl
 import hashlib
 import json
+import math
 import os
 import re
 import shutil
@@ -120,7 +121,32 @@ def render_preview(repo, preview, gallery):
             atomic_write(destination, original.read_bytes())
     atomic_write(preview / 'index.html', source.encode())
 
-def clean_upload(data, filename):
+def capture_date(image):
+    """Read the camera's local calendar date before removing private metadata."""
+    try:
+        exif = image.getexif()
+        try:
+            details = exif.get_ifd(34665)
+        except (KeyError, TypeError, ValueError, SyntaxError):
+            details = {}
+        for tag in (36867, 36868, 306):
+            for source in (details, exif):
+                value = source.get(tag, '')
+                if isinstance(value, bytes):
+                    value = value.decode('ascii', errors='ignore')
+                if not isinstance(value, str):
+                    continue
+                match = re.match(r'^\s*(\d{4})[:-](\d{2})[:-](\d{2})(?:[ T]|$)', value.strip('\0'))
+                if match:
+                    try:
+                        return date(*map(int, match.groups())).isoformat()
+                    except ValueError:
+                        pass
+    except (OSError, ValueError, TypeError, SyntaxError):
+        pass
+    return ''
+
+def clean_upload(data, filename, include_date=False):
     try:
         original = Image.open(BytesIO(data))
     except UnidentifiedImageError:
@@ -137,6 +163,7 @@ def clean_upload(data, filename):
     with original:
         if original.format not in ('JPEG', 'MPO', 'PNG', 'WEBP'):
             raise ValueError('Choose a JPEG, PNG, WebP, or supported HEIC photo.')
+        taken = capture_date(original) if include_date else ''
         # iPhone JPEGs can contain an auxiliary image (for example an HDR
         # gain map), so Pillow identifies them as MPO. Export the main photo.
         # The JPEG cleaner drops the MPF index and ends at the first image's
@@ -144,7 +171,8 @@ def clean_upload(data, filename):
         original.load()
         orientation = original.getexif().get(274, 1)
         if original.format in ('JPEG', 'MPO') and orientation == 1:
-            return strip_descriptive_metadata(data), 'jpeg', original.size
+            result = (strip_descriptive_metadata(data), 'jpeg', original.size)
+            return result + (taken,) if include_date else result
         profile = original.info.get('icc_profile')
         image = ImageOps.exif_transpose(original)
         if image.mode == 'P':
@@ -163,7 +191,8 @@ def clean_upload(data, filename):
                 clean = clean.convert('RGB')
             clean.save(output, format='JPEG', quality=95, subsampling=0, icc_profile=profile)
             extension = 'jpeg'
-        return output.getvalue(), extension, clean.size
+        result = (output.getvalue(), extension, clean.size)
+        return result + (taken,) if include_date else result
 
 class PhotoLibrary:
     def __init__(self, repo, preview):
@@ -172,6 +201,10 @@ class PhotoLibrary:
         self.path = self.repo / 'src/data/gallery.json'
         self.thread_lock = threading.RLock()
         self.lock_path = self.repo / '.git/photo-editor.lock'
+        self.crops_path = self.repo / '.git/photo-editor-crops.json'
+
+    def crop_records(self):
+        return json.loads(self.crops_path.read_text()) if self.crops_path.exists() else {}
 
     @contextmanager
     def locked(self):
@@ -186,7 +219,11 @@ class PhotoLibrary:
 
     def state(self):
         raw = self.path.read_bytes()
-        return dict(photos=json.loads(raw), revision=hashlib.sha256(raw).hexdigest())
+        photos = json.loads(raw)
+        records = self.crop_records()
+        restorable = [photo['id'] for photo in photos if photo['id'] in records
+            and photo['src'] != records[photo['id']]['src']]
+        return dict(photos=photos, revision=hashlib.sha256(raw).hexdigest(), restorable=restorable)
 
     def refresh_preview(self):
         with self.locked():
@@ -194,7 +231,7 @@ class PhotoLibrary:
 
     def import_photo(self, filename, encoded):
         raw = base64.b64decode(encoded, validate=True)
-        data, extension, dimensions = clean_upload(raw, filename)
+        data, extension, dimensions, taken = clean_upload(raw, filename, include_date=True)
         digest = hashlib.sha256(data).hexdigest()[:16]
         slug = re.sub(r'[^a-z0-9]+', '-', Path(filename).stem.lower()).strip('-')[:45] or 'photo'
         name = f'{slug}-{digest}.{extension}'
@@ -204,7 +241,78 @@ class PhotoLibrary:
                 atomic_write(path, data)
         width, height = dimensions
         return dict(id=name.rsplit('.', 1)[0], src='/images/' + name, width=width,
-            height=height, caption='', alt='', date='')
+            height=height, caption='', alt='', date=taken)
+
+    def crop_photo(self, identifier, source, rectangle):
+        if not isinstance(identifier, str) or not identifier or len(identifier) > 200:
+            raise ValueError('Choose a photo to crop.')
+        if not isinstance(rectangle, dict):
+            raise ValueError('Choose a crop area.')
+        values = [rectangle.get(key) for key in ('x', 'y', 'width', 'height')]
+        if not all(type(value) in (int, float) and math.isfinite(value) for value in values):
+            raise ValueError('Crop coordinates must be finite numbers.')
+        x, y, width, height = values
+        if x < 0 or y < 0 or width <= 0 or height <= 0 or x + width > 1.000001 or y + height > 1.000001:
+            raise ValueError('Keep the crop inside the photo.')
+        with self.locked():
+            path = readable_image_path(self.repo, source)
+            raw = path.read_bytes()
+            # Normalize orientation and remove any descriptive metadata from
+            # both the crop and the private, restorable original.
+            original, extension, dimensions = clean_upload(raw, path.name)
+            image_width, image_height = dimensions
+            box = (round(x * image_width), round(y * image_height),
+                min(image_width, round((x + width) * image_width)),
+                min(image_height, round((y + height) * image_height)))
+            if box[2] - box[0] < 2 or box[3] - box[1] < 2:
+                raise ValueError('Choose a crop at least 2 pixels wide and high.')
+            if box == (0, 0, image_width, image_height):
+                record = self.crop_records().get(identifier)
+                return dict(src=source, width=image_width, height=image_height,
+                    restorable=bool(record and source != record['src']))
+            with Image.open(BytesIO(original)) as image:
+                cropped = image.crop(box)
+                profile = image.info.get('icc_profile')
+                if cropped.mode == 'P':
+                    cropped = cropped.convert('RGBA' if 'transparency' in image.info else 'RGB')
+                clean = Image.frombytes(cropped.mode, cropped.size, cropped.tobytes())
+                output = BytesIO()
+                options = dict(icc_profile=profile)
+                if extension == 'jpeg':
+                    if clean.mode not in ('RGB', 'L', 'CMYK'):
+                        clean = clean.convert('RGB')
+                    clean.save(output, 'JPEG', quality=95, subsampling=0, **options)
+                elif extension == 'webp':
+                    clean.save(output, 'WEBP', lossless=True, **options)
+                else:
+                    clean.save(output, 'PNG', **options)
+                result = output.getvalue()
+                dimensions = clean.size
+            digest = hashlib.sha256(result).hexdigest()[:16]
+            name = f'crop-{digest}.{extension}'
+            atomic_write(self.repo / '.git/photo-editor-imports' / name, result)
+            records = self.crop_records()
+            if identifier not in records:
+                original_name = 'original-' + hashlib.sha256(original).hexdigest()[:16] + '.' + extension
+                atomic_write(self.repo / '.git/photo-editor-originals' / original_name, original)
+                records[identifier] = dict(src='/images/' + original_name,
+                    width=image_width, height=image_height)
+                atomic_write(self.crops_path, (json.dumps(records, ensure_ascii=False, indent=2) + '\n').encode())
+            return dict(src='/images/' + name, width=dimensions[0], height=dimensions[1], restorable=True)
+
+    def restore_photo(self, identifier):
+        if not isinstance(identifier, str) or not identifier:
+            raise ValueError('Choose a photo to restore.')
+        with self.locked():
+            record = self.crop_records().get(identifier)
+            if not record:
+                raise ValueError('There is no saved original for this photo on this computer.')
+            name = image_path(self.repo, record['src']).name
+            original = self.repo / '.git/photo-editor-originals' / name
+            if not original.is_file():
+                raise ValueError('The saved original is missing from this computer.')
+            atomic_write(self.repo / '.git/photo-editor-imports' / name, original.read_bytes())
+            return dict(**record, restorable=False)
 
     def save(self, entries, revision):
         with self.locked():

@@ -47,10 +47,48 @@
     .row-actions .remove { color: #91382e; margin-left: auto; }
     .empty { padding: 2rem 0; color: #4d6655; }
     #deployment-link { display: none; }
+    dialog { width: min(920px, calc(100% - 2rem)); max-height: calc(100dvh - 2rem); overflow: auto;
+      padding: 1.5rem; border: 1px solid #9aae9a; border-radius: .75rem; background: #f8faf5; color: inherit; }
+    dialog::backdrop { background: rgb(12 30 22 / .7); }
+    dialog h2 { margin: 0; font-size: 1.5rem; }
+    .crop-help { margin: .4rem 0 1rem; color: #4d6655; }
+    .crop-workspace { display: flex; justify-content: center; align-items: center; min-height: 120px;
+      background: #dce5d5; border-radius: .4rem; padding: 18px; }
+    .crop-stage { position: relative; overflow: hidden; flex: none; }
+    #crop-image { display: block; width: 100%; height: 100%; user-select: none; }
+    #crop-frame { position: absolute; border: 2px solid white; box-shadow: 0 0 0 2000px rgb(0 0 0 / .55);
+      cursor: move; touch-action: none; }
+    #crop-frame::before, #crop-frame::after { content: ''; position: absolute; pointer-events: none;
+      border: 1px solid rgb(255 255 255 / .55); }
+    #crop-frame::before { inset: 33.333% 0; border-left: 0; border-right: 0; }
+    #crop-frame::after { inset: 0 33.333%; border-top: 0; border-bottom: 0; }
+    #crop-frame:focus-visible { outline: 2px solid #1b392d; outline-offset: -5px; }
+    .crop-handle { position: absolute; min-height: 0; width: 44px; height: 44px; padding: 0;
+      border: 0; border-radius: 0; background: transparent; }
+    .crop-handle::after { content: ''; position: absolute; width: 12px; height: 12px; border: 2px solid #1b392d; background: white; }
+    [data-corner="nw"] { left: 0; top: 0; cursor: nwse-resize; }
+    [data-corner="ne"] { right: 0; top: 0; cursor: nesw-resize; }
+    [data-corner="sw"] { left: 0; bottom: 0; cursor: nesw-resize; }
+    [data-corner="se"] { right: 0; bottom: 0; cursor: nwse-resize; }
+    [data-corner="nw"]::after, [data-corner="ne"]::after { top: 0; }
+    [data-corner="sw"]::after, [data-corner="se"]::after { bottom: 0; }
+    [data-corner="nw"]::after, [data-corner="sw"]::after { left: 0; }
+    [data-corner="ne"]::after, [data-corner="se"]::after { right: 0; }
+    .crop-settings { display: grid; grid-template-columns: 1.6fr repeat(4, 1fr); gap: .75rem; margin-top: 1rem; }
+    select { min-height: 44px; width: 100%; font: inherit; color: inherit; background: white;
+      border: 1px solid #9aae9a; border-radius: .35rem; padding: .6rem; }
+    .crop-settings input, #crop-size { font-variant-numeric: tabular-nums; }
+    .crop-footer { display: flex; justify-content: space-between; gap: .75rem; align-items: center; flex-wrap: wrap; margin-top: 1rem; }
+    #crop-error { color: #9a312e; margin: .5rem 0 0; }
+    select:focus-visible { outline: 2px solid #326f4a; outline-offset: 3px; }
     @media (max-width: 650px) {
       .photo-row { grid-template-columns: minmax(0, 1fr); gap: 1rem; }
       header { align-items: flex-start; }
       .thumbnail { height: 200px; }
+      dialog { padding: 1rem; }
+      .crop-settings { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .crop-settings label:first-child { grid-column: 1 / -1; }
+      .crop-footer .actions { width: 100%; justify-content: flex-end; }
     }
   </style>
 </head>
@@ -66,11 +104,38 @@
   <p id="status" role="status" aria-live="polite">Connecting to this computer…</p>
   <a id="deployment-link" target="_blank" rel="noopener">View deployment</a>
   <section id="upload" aria-label="Add photos">
-    <p>Drop photos here, or choose files.<br><small>Portrait and landscape photos keep their shape. Descriptive metadata is removed on import.</small></p>
+    <p>Drop photos here, or choose files.<br><small>The capture date fills in automatically when available. Descriptive metadata is then removed.</small></p>
     <button id="add" disabled>Add photos</button>
     <input id="files" type="file" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp,.mpo,.heic,.heif" multiple hidden>
   </section>
   <div id="list"></div>
+  <dialog id="crop-dialog" aria-labelledby="crop-title" aria-describedby="crop-help">
+    <h2 id="crop-title">Crop photo</h2>
+    <p class="crop-help" id="crop-help">Drag the frame or its corners. You can also enter pixel values below.</p>
+    <div class="crop-workspace">
+      <div class="crop-stage" id="crop-stage">
+        <img id="crop-image" alt="Photo being cropped" draggable="false">
+        <div id="crop-frame" tabindex="0" role="group" aria-label="Crop selection. Arrow keys move, Shift moves ten pixels.">
+          <button class="crop-handle" data-corner="nw" aria-label="Resize top left corner"></button>
+          <button class="crop-handle" data-corner="ne" aria-label="Resize top right corner"></button>
+          <button class="crop-handle" data-corner="sw" aria-label="Resize bottom left corner"></button>
+          <button class="crop-handle" data-corner="se" aria-label="Resize bottom right corner"></button>
+        </div>
+      </div>
+    </div>
+    <div class="crop-settings">
+      <label>Aspect ratio<select id="crop-ratio"><option value="0">Freeform</option><option value="original">Original</option><option value="1">Square</option><option value="1.3333333333333333">4:3</option><option value="1.7777777777777777">16:9</option><option value="0.75">Portrait 3:4</option></select></label>
+      <label>Left (px)<input id="crop-x" type="number" min="0" step="1"></label>
+      <label>Top (px)<input id="crop-y" type="number" min="0" step="1"></label>
+      <label>Width (px)<input id="crop-width" type="number" min="2" step="1"></label>
+      <label>Height (px)<input id="crop-height" type="number" min="2" step="1"></label>
+    </div>
+    <p id="crop-error" role="alert"></p>
+    <div class="crop-footer">
+      <output id="crop-size" aria-live="polite"></output>
+      <div class="actions"><button id="crop-reset">Reset selection</button><button id="crop-cancel">Cancel</button><button id="crop-apply" class="primary">Apply crop</button></div>
+    </div>
+  </dialog>
   <script>
     const token = document.querySelector('meta[name="editor-token"]').content;
     const list = document.querySelector('#list');
@@ -85,6 +150,7 @@
     let dirty = false;
     let busy = false;
     let deploymentTimer = null;
+    let restorable = new Set();
 
     function setStatus(message, error = false) {
       status.textContent = message;
@@ -165,7 +231,8 @@
         fields.append(description);
         const actions = document.createElement('div');
         actions.className = 'row-actions';
-        [['Move up', 'up', index === 0], ['Move down', 'down', index === photos.length - 1],
+        [['Crop', 'crop', false], ...(restorable.has(photo.id) ? [['Restore original', 'restore', false]] : []),
+          ['Move up', 'up', index === 0], ['Move down', 'down', index === photos.length - 1],
           ['Remove', 'remove', false]].forEach(([text, action, boundary]) => {
           const button = document.createElement('button');
           button.textContent = text;
@@ -187,11 +254,25 @@
       photos[Number(input.dataset.index)][input.dataset.field] = input.value;
       markDirty();
     });
-    list.addEventListener('click', event => {
+    list.addEventListener('click', async event => {
       const button = event.target.closest('button[data-action]');
       if (!button || busy) return;
       const index = Number(button.dataset.index);
       const action = button.dataset.action;
+      if (action === 'crop') { openCrop(index); return; }
+      if (action === 'restore') {
+        busy = true;
+        updateButtons();
+        try {
+          const result = await api('/api/restore', { id: photos[index].id });
+          Object.assign(photos[index], { src: result.src, width: result.width, height: result.height });
+          restorable.delete(photos[index].id);
+          markDirty(); render();
+          setStatus('Original restored. Save your changes to keep it.');
+        } catch (error) { setStatus(error.message, true); }
+        finally { busy = false; updateButtons(); }
+        return;
+      }
       if (action === 'remove') photos.splice(index, 1);
       if (action === 'up' && index > 0) [photos[index - 1], photos[index]] = [photos[index], photos[index - 1]];
       if (action === 'down' && index < photos.length - 1) [photos[index + 1], photos[index]] = [photos[index], photos[index + 1]];
@@ -201,6 +282,7 @@
     async function save() {
       const result = await api('/api/save', { photos, revision });
       photos = result.photos;
+      restorable = new Set(result.restorable || []);
       revision = result.revision;
       dirty = false;
       render();
@@ -297,8 +379,138 @@
     window.addEventListener('beforeunload', event => {
       if (dirty) { event.preventDefault(); event.returnValue = ''; }
     });
+    const cropDialog = document.querySelector('#crop-dialog');
+    const cropImage = document.querySelector('#crop-image');
+    const cropStage = document.querySelector('#crop-stage');
+    const cropFrame = document.querySelector('#crop-frame');
+    const cropRatio = document.querySelector('#crop-ratio');
+    const cropApply = document.querySelector('#crop-apply');
+    const cropError = document.querySelector('#crop-error');
+    const cropInputs = Object.fromEntries(['x', 'y', 'width', 'height'].map(key => [key, document.querySelector('#crop-' + key)]));
+    let cropIndex = -1, cropRect, cropDrag = null, cropReady = false;
+    const clamp = (value, low, high) => Math.max(low, Math.min(high, value));
+    function aspectFactor() {
+      const ratio = cropRatio.value === 'original' ? cropImage.naturalWidth / cropImage.naturalHeight : Number(cropRatio.value);
+      return ratio ? cropImage.naturalWidth / cropImage.naturalHeight / ratio : 0;
+    }
+    function drawCrop() {
+      if (!cropReady) return;
+      const r = cropRect, w = cropImage.naturalWidth, h = cropImage.naturalHeight;
+      Object.assign(cropFrame.style, { left: r.x * 100 + '%', top: r.y * 100 + '%', width: r.width * 100 + '%', height: r.height * 100 + '%' });
+      const pixels = { x: Math.round(r.x * w), y: Math.round(r.y * h),
+        width: Math.round((r.x + r.width) * w) - Math.round(r.x * w), height: Math.round((r.y + r.height) * h) - Math.round(r.y * h) };
+      for (const key in pixels) { cropInputs[key].value = pixels[key]; cropInputs[key].max = key === 'x' || key === 'width' ? w : h; }
+      document.querySelector('#crop-size').textContent = pixels.width + ' × ' + pixels.height + ' px';
+    }
+    function fitCropStage() {
+      if (!cropReady) return;
+      const scale = Math.min((cropStage.parentElement.clientWidth - 36) / cropImage.naturalWidth,
+        Math.min(540, innerHeight * .48) / cropImage.naturalHeight);
+      cropStage.style.width = cropImage.naturalWidth * scale + 'px';
+      cropStage.style.height = cropImage.naturalHeight * scale + 'px';
+    }
+    function resetCrop() {
+      cropRect = { x: 0, y: 0, width: 1, height: 1 };
+      const factor = aspectFactor();
+      if (factor) {
+        cropRect.width = Math.min(1, 1 / factor);
+        cropRect.height = cropRect.width * factor;
+        cropRect.x = (1 - cropRect.width) / 2; cropRect.y = (1 - cropRect.height) / 2;
+      }
+      drawCrop();
+    }
+    async function openCrop(index) {
+      cropIndex = index; cropReady = false; cropRatio.value = '0'; cropError.textContent = '';
+      cropApply.disabled = true; cropApply.textContent = 'Loading photo…';
+      cropStage.style.width = '0px'; cropStage.style.height = '0px';
+      cropDialog.showModal();
+      cropImage.src = photos[index].src;
+      try {
+        await cropImage.decode();
+        if (!cropDialog.open) return;
+        cropReady = true; fitCropStage(); resetCrop();
+        cropFrame.focus();
+      } catch (error) { cropError.textContent = 'Could not load this photo. Close the crop tool and try again.'; }
+      cropApply.disabled = !cropReady; cropApply.textContent = 'Apply crop';
+    }
+    function resizeCrop(start, corner, px, py) {
+      const east = corner.includes('e'), south = corner.includes('s');
+      const ax = east ? start.x : start.x + start.width, ay = south ? start.y : start.y + start.height;
+      const maxW = east ? 1 - ax : ax, maxH = south ? 1 - ay : ay;
+      const minW = 2 / cropImage.naturalWidth, minH = 2 / cropImage.naturalHeight;
+      let width = clamp(east ? px - ax : ax - px, minW, maxW);
+      let height = clamp(south ? py - ay : ay - py, minH, maxH);
+      const factor = aspectFactor();
+      if (factor) { width = clamp(Math.max(width, height / factor), Math.max(minW, minH / factor), Math.min(maxW, maxH / factor)); height = width * factor; }
+      cropRect = { x: east ? ax : ax - width, y: south ? ay : ay - height, width, height };
+      drawCrop();
+    }
+    cropFrame.addEventListener('pointerdown', event => {
+      if (!cropReady || busy || event.button !== 0) return;
+      event.preventDefault(); event.target.focus();
+      cropDrag = { pointer: event.pointerId, x: event.clientX, y: event.clientY, rect: { ...cropRect },
+        corner: event.target.closest('[data-corner]')?.dataset.corner };
+      cropFrame.setPointerCapture(event.pointerId);
+    });
+    cropFrame.addEventListener('pointermove', event => {
+      if (!cropDrag || event.pointerId !== cropDrag.pointer) return;
+      const bounds = cropStage.getBoundingClientRect();
+      if (cropDrag.corner) resizeCrop(cropDrag.rect, cropDrag.corner, (event.clientX - bounds.left) / bounds.width, (event.clientY - bounds.top) / bounds.height);
+      else { const r = cropDrag.rect; cropRect = { ...r, x: clamp(r.x + (event.clientX - cropDrag.x) / bounds.width, 0, 1 - r.width), y: clamp(r.y + (event.clientY - cropDrag.y) / bounds.height, 0, 1 - r.height) }; drawCrop(); }
+    });
+    for (const event of ['pointerup', 'pointercancel', 'lostpointercapture']) cropFrame.addEventListener(event, () => { cropDrag = null; });
+    cropFrame.addEventListener('keydown', event => {
+      if (!cropReady || busy || !['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) return;
+      event.preventDefault();
+      const step = event.shiftKey ? 10 : 1, r = { ...cropRect };
+      const dx = (event.key === 'ArrowRight' ? step : event.key === 'ArrowLeft' ? -step : 0) / cropImage.naturalWidth;
+      const dy = (event.key === 'ArrowDown' ? step : event.key === 'ArrowUp' ? -step : 0) / cropImage.naturalHeight;
+      const corner = event.target.dataset.corner;
+      if (corner) {
+        const east = corner.includes('e'), south = corner.includes('s'), factor = aspectFactor();
+        const changeW = dx ? (east ? dx : -dx) : (south ? dy : -dy) / (factor || 1);
+        resizeCrop(r, corner, (east ? r.x + r.width : r.x) + (factor ? (east ? changeW : -changeW) : dx),
+          (south ? r.y + r.height : r.y) + (factor ? (south ? changeW * factor : -changeW * factor) : dy));
+      }
+      else { cropRect.x = clamp(r.x + dx, 0, 1 - r.width); cropRect.y = clamp(r.y + dy, 0, 1 - r.height); drawCrop(); }
+    });
+    for (const key in cropInputs) for (const event of ['change', 'blur']) cropInputs[key].addEventListener(event, () => {
+      if (!cropReady) return;
+      const value = Number(cropInputs[key].value), w = cropImage.naturalWidth, h = cropImage.naturalHeight;
+      if (!Number.isFinite(value)) { drawCrop(); return; }
+      if (key === 'x') cropRect.x = clamp(value / w, 0, 1 - cropRect.width);
+      if (key === 'y') cropRect.y = clamp(value / h, 0, 1 - cropRect.height);
+      if (key === 'width' || key === 'height') {
+        const factor = aspectFactor();
+        if (factor) { cropRect.width = clamp(key === 'width' ? value / w : value / h / factor,
+          Math.max(2 / w, 2 / h / factor), Math.min(1 - cropRect.x, (1 - cropRect.y) / factor)); cropRect.height = cropRect.width * factor; }
+        else cropRect[key] = clamp(value / (key === 'width' ? w : h), 2 / (key === 'width' ? w : h), 1 - cropRect[key === 'width' ? 'x' : 'y']);
+      }
+      drawCrop();
+    });
+    cropRatio.addEventListener('change', resetCrop);
+    document.querySelector('#crop-reset').addEventListener('click', resetCrop);
+    document.querySelector('#crop-cancel').addEventListener('click', () => { if (!busy) cropDialog.close(); });
+    cropDialog.addEventListener('cancel', event => { if (busy) event.preventDefault(); });
+    cropDialog.addEventListener('close', () => { cropDrag = null; list.querySelector('button[data-action="crop"][data-index="' + cropIndex + '"]')?.focus(); });
+    window.addEventListener('resize', fitCropStage);
+    cropApply.addEventListener('click', async () => {
+      if (!cropReady || busy) return;
+      busy = true; updateButtons(); cropError.textContent = ''; cropApply.textContent = 'Applying…';
+      cropDialog.querySelectorAll('button, input, select').forEach(el => { el.disabled = true; });
+      try {
+        const photo = photos[cropIndex];
+        const result = await api('/api/crop', { id: photo.id, src: photo.src, rect: cropRect });
+        Object.assign(photo, { src: result.src, width: result.width, height: result.height });
+        if (result.restorable) restorable.add(photo.id);
+        markDirty(); render(); cropDialog.close();
+        setStatus('Crop applied. Save your changes, then publish when you’re ready.');
+      } catch (error) { cropError.textContent = error.message; }
+      finally { busy = false; updateButtons(); cropApply.textContent = 'Apply crop'; cropDialog.querySelectorAll('button, input, select').forEach(el => { el.disabled = false; }); }
+    });
     api('/api/state').then(result => {
       photos = result.photos;
+      restorable = new Set(result.restorable || []);
       revision = result.revision;
       render();
       setStatus('Edit captions and dates, move photos into order, or add more photos.');

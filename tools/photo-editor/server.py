@@ -100,6 +100,10 @@ class Handler(BaseHTTPRequestHandler):
                 self.json(dict(photos=photos, errors=errors))
             elif path == '/api/save':
                 self.json(self.server.library.save(body['photos'], body['revision']))
+            elif path == '/api/crop':
+                self.json(self.server.library.crop_photo(body['id'], body['src'], body['rect']))
+            elif path == '/api/restore':
+                self.json(self.server.library.restore_photo(body['id']))
             elif path == '/api/publish':
                 self.json(self.server.library.publish())
             else:

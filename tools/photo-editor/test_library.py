@@ -8,7 +8,7 @@ import unittest
 from html.parser import HTMLParser
 
 from PIL import Image, PngImagePlugin
-from library import PhotoLibrary, ConflictError, clean_upload, validate_gallery
+from library import PhotoLibrary, ConflictError, clean_upload, validate_gallery, capture_date
 
 TEMPLATE = '''---
 ---
@@ -74,6 +74,94 @@ class LibraryTests(unittest.TestCase):
 
     def add_photo(self):
         return self.library.import_photo('Portrait.jpeg', base64.b64encode(jpeg()).decode())
+
+    def test_capture_date_is_default_before_private_metadata_is_removed(self):
+        photo = self.add_photo()
+        self.assertEqual(photo['date'], '2026-10-10')
+        data = (self.repo / '.git/photo-editor-imports' / Path(photo['src']).name).read_bytes()
+        with Image.open(BytesIO(data)) as image:
+            self.assertFalse(image.getexif())
+            self.assertNotIn('xmp', image.info)
+        photo['date'] = '2025-02-03'
+        saved = self.library.save([photo], self.library.state()['revision'])
+        self.assertEqual(saved['photos'][0]['date'], '2025-02-03')
+
+    def test_capture_date_prioritizes_nested_original_and_validates_calendar(self):
+        image = Image.new('RGB', (8, 8))
+        exif = Image.Exif()
+        exif[306] = '2026:11:24 12:00:00'
+        exif[34665] = {36867: '2024:02:29 23:59:00', 36868: '2025:01:01 00:00:00'}
+        output = BytesIO()
+        image.save(output, 'JPEG', exif=exif)
+        with Image.open(BytesIO(output.getvalue())) as opened:
+            self.assertEqual(capture_date(opened), '2024-02-29')
+        exif[34665] = {36867: '2025:02:29 00:00:00', 36868: '2025:03:01 00:00:00'}
+        output = BytesIO()
+        image.save(output, 'JPEG', exif=exif)
+        with Image.open(BytesIO(output.getvalue())) as opened:
+            self.assertEqual(capture_date(opened), '2025-03-01')
+        self.assertEqual(capture_date(image), '')
+
+    def test_renamed_mpo_reads_capture_date_before_cleanup(self):
+        with Image.open(BytesIO(jpeg())) as image:
+            output = BytesIO()
+            image.save(output, 'MPO', save_all=True, append_images=[Image.new('RGB', (8, 8))], exif=image.getexif())
+        photo = self.library.import_photo('renamed.png', base64.b64encode(output.getvalue()).decode())
+        self.assertEqual(photo['date'], '2026-10-10')
+
+    def test_crop_pixels_transparency_color_profile_save_and_restore(self):
+        image = Image.new('RGBA', (40, 30))
+        image.putdata([(x * 5, y * 7, 90, (x + y) * 3) for y in range(30) for x in range(40)])
+        output = BytesIO()
+        image.save(output, 'PNG', icc_profile=b'Color profile', exif=Image.Exif())
+        photo = self.library.import_photo('pattern.png', base64.b64encode(output.getvalue()).decode())
+        photo.update(caption='Keep this caption.', date='2024-01-02', alt='A test pattern')
+        original_id = photo['id']
+        original_source = photo['src']
+        original_bytes = (self.repo / '.git/photo-editor-imports' / Path(original_source).name).read_bytes()
+        state = self.library.save([photo], self.library.state()['revision'])
+        result = self.library.crop_photo(photo['id'], photo['src'], dict(x=.25, y=.2, width=.5, height=.6))
+        self.assertEqual((result['width'], result['height']), (20, 18))
+        self.assertFalse((self.repo / 'public' / result['src'].lstrip('/')).exists())
+        with Image.open(self.repo / '.git/photo-editor-imports' / Path(result['src']).name) as cropped:
+            self.assertEqual(cropped.tobytes(), image.crop((10, 6, 30, 24)).tobytes())
+            self.assertEqual(cropped.info['icc_profile'], b'Color profile')
+            self.assertFalse(cropped.getexif())
+        photo.update({key: result[key] for key in ('src', 'width', 'height')})
+        state = self.library.save([photo], state['revision'])
+        self.assertEqual(state['restorable'], [original_id])
+        self.assertFalse((self.repo / 'public' / original_source.lstrip('/')).exists())
+        self.assertEqual(state['photos'][0]['caption'], 'Keep this caption.')
+        self.assertEqual(state['photos'][0]['date'], '2024-01-02')
+        self.assertEqual(state['photos'][0]['id'], original_id)
+        self.assertEqual(state['photos'][0]['alt'], 'A test pattern')
+        reopened = PhotoLibrary(self.repo, self.library.preview)
+        restored = reopened.restore_photo(original_id)
+        restored_bytes = (self.repo / '.git/photo-editor-imports' / Path(restored['src']).name).read_bytes()
+        self.assertEqual(restored_bytes, original_bytes)
+        photo.update({key: restored[key] for key in ('src', 'width', 'height')})
+        state = reopened.save([photo], state['revision'])
+        self.assertEqual(state['restorable'], [])
+        self.assertEqual((state['photos'][0]['width'], state['photos'][0]['height']), (40, 30))
+
+    def test_crop_rejects_invalid_areas_and_keeps_original_private(self):
+        photo = self.add_photo()
+        for rectangle in [None, {}, dict(x=-.1, y=0, width=.5, height=.5),
+            dict(x=0, y=0, width=float('nan'), height=.5),
+            dict(x=0, y=0, width=True, height=.5), dict(x=0, y=0, width=.001, height=.001),
+            dict(x=.8, y=0, width=.5, height=1)]:
+            with self.subTest(rectangle=rectangle), self.assertRaises(ValueError):
+                self.library.crop_photo(photo['id'], photo['src'], rectangle)
+        result = self.library.crop_photo(photo['id'], photo['src'], dict(x=0, y=0, width=.5, height=.5))
+        record = self.library.crop_records()[photo['id']]
+        self.assertFalse((self.repo / 'public' / record['src'].lstrip('/')).exists())
+        with Image.open(self.repo / '.git/photo-editor-originals' / Path(record['src']).name) as image:
+            self.assertFalse(image.getexif())
+        first_record = record.copy()
+        self.library.crop_photo(photo['id'], result['src'], dict(x=0, y=0, width=.5, height=.5))
+        self.assertEqual(self.library.crop_records()[photo['id']], first_record)
+        with self.assertRaises(ValueError):
+            self.library.crop_photo(photo['id'], '/images/../../private.jpeg', dict(x=0, y=0, width=.5, height=.5))
 
     def test_jpeg_metadata_removed_without_reencoding(self):
         original = jpeg()

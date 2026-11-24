@@ -60,20 +60,15 @@ Each block has a `name`, the repository `repo` slug, and the `description` from 
 
 ## Add a photo
 
-1. Put the image in `public/photos/`. JPG, PNG, WebP, and SVG all work.
-2. Add an entry to `src/data/photos.ts`:
+1. Open `Manage Photos.command`, then choose **Add photos** or drop files into the editor. JPEG, PNG, WebP, and supported HEIC photos work.
+2. Add a caption and an image description for screen readers. The optional, editable date fills from EXIF DateTimeOriginal, then DateTimeDigitized, then DateTime when available; otherwise it stays blank. This date is read before descriptive metadata is removed from the image.
+3. To crop, choose **Crop** on the photo's row. Drag the selection to move it and its corners to resize it, or enter Left, Top, Width, and Height in pixels. Choose Freeform, Original, Square, 4:3, 16:9, or Portrait 3:4. Arrow keys move the focused selection or resize a focused corner by one pixel; hold Shift for ten pixels. **Reset selection** resets the frame; **Cancel** leaves the photo unchanged.
+4. Choose **Apply crop**, then **Save changes**. Captions, dates, descriptions, and photo identifiers survive cropping. Move photos up or down or remove them as needed, then save again.
+5. Open **Preview saved site** to check the saved gallery, then choose **Publish website** to make it live.
 
-   ```ts
-   {
-     src: '/photos/my-picture.jpg',
-     alt: 'Describe the picture',
-     caption: 'A short caption.',
-   },
-   ```
+After a crop, **Restore original** returns to the first pre-crop image and keeps the caption, date, description, and identifier. Save and publish the restoration when ready. The sanitized backup stays privately in this checkout's `.git/photo-editor-originals`, with its lookup in `.git/photo-editor-crops.json`; these files are not published or included in a new clone, so restoration is unavailable on another computer without that local backup.
 
-3. Delete the placeholder drawings when you do not want them. They are sketches, not photographs, and each one is marked Placeholder.
-
-`src` starts with `/photos/` because that folder is served as-is.
+The saved gallery lives in `src/data/gallery.json`, with public images in `public/images/`.
 
 ## Edit what you're listening to
 
