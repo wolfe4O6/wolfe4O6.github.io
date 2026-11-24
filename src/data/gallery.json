@@ -61,5 +61,32 @@
     "caption": "Post race glory.",
     "alt": "Me after I PRed at NXR northwest 2026 running a 20:09 5K!",
     "date": "2026-11-20"
+  },
+  {
+    "id": "snowy-lake-285aa7228a43f231",
+    "src": "/images/snowy-lake-285aa7228a43f231.jpeg",
+    "width": 1330,
+    "height": 2364,
+    "caption": "A day by the lake.",
+    "alt": "A dog walks through snow beside a partially frozen lake, with pine trees and snow-covered mountains beyond.",
+    "date": ""
+  },
+  {
+    "id": "spring-stream-9bd09880a2f856e7",
+    "src": "/images/spring-stream-9bd09880a2f856e7.jpeg",
+    "width": 1330,
+    "height": 2364,
+    "caption": "Small signs of spring.",
+    "alt": "New green shoots emerge between wet rocks in a shallow stream.",
+    "date": ""
+  },
+  {
+    "id": "ladybug-3daf1dd22cf3ab76",
+    "src": "/images/ladybug-3daf1dd22cf3ab76.jpeg",
+    "width": 1330,
+    "height": 2364,
+    "caption": "Up close.",
+    "alt": "A red and black ladybug rests on a fuzzy green plant.",
+    "date": ""
   }
 ]
