@@ -71,6 +71,41 @@ class LibraryTests(unittest.TestCase):
             self.assertEqual(before.convert('RGBA').tobytes(), after.convert('RGBA').tobytes())
             self.assertNotIn('Description', after.info)
 
+    def test_multi_image_jpeg_imports_main_photo_despite_renamed_extension(self):
+        with Image.open(BytesIO(jpeg())) as primary:
+            output = BytesIO()
+            auxiliary = Image.new('RGB', (12, 20), 'gray')
+            primary.save(output, 'MPO', save_all=True, append_images=[auxiliary],
+                exif=primary.getexif(), icc_profile=b'Test color profile')
+        original = output.getvalue()
+        for filename in ('trees.jpg', 'trees.png', 'trees.mpo'):
+            with self.subTest(filename=filename):
+                cleaned, extension, size = clean_upload(original, filename)
+                self.assertEqual(extension, 'jpeg')
+                self.assertEqual(size, (24, 40))
+                with Image.open(BytesIO(original)) as before, Image.open(BytesIO(cleaned)) as after:
+                    self.assertEqual(before.format, 'MPO')
+                    self.assertEqual(before.n_frames, 2)
+                    self.assertEqual(after.format, 'JPEG')
+                    self.assertFalse(after.getexif())
+                    self.assertNotIn('mp', after.info)
+                    self.assertEqual(after.info['icc_profile'], before.info['icc_profile'])
+                    self.assertEqual(after.tobytes(), before.tobytes())
+                self.assertEqual(cleaned.count(b'\xff\xd8'), 1)
+
+    def test_rotated_multi_image_jpeg_applies_orientation(self):
+        primary = Image.new('RGB', (40, 24), 'green')
+        exif = Image.Exif()
+        exif[274] = 6
+        output = BytesIO()
+        primary.save(output, 'MPO', save_all=True,
+            append_images=[Image.new('RGB', (20, 12), 'gray')], exif=exif)
+        cleaned, extension, size = clean_upload(output.getvalue(), 'trees.png')
+        self.assertEqual((extension, size), ('jpeg', (24, 40)))
+        with Image.open(BytesIO(cleaned)) as after:
+            self.assertEqual(after.format, 'JPEG')
+            self.assertFalse(after.getexif())
+
     def test_orientation_is_applied_before_exif_is_removed(self):
         image = Image.new('RGB', (40, 24), 'green')
         exif = Image.Exif()

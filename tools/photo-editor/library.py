@@ -127,11 +127,15 @@ def clean_upload(data, filename):
             data = target.read_bytes()
         original = Image.open(BytesIO(data))
     with original:
-        if original.format not in ('JPEG', 'PNG', 'WEBP'):
+        if original.format not in ('JPEG', 'MPO', 'PNG', 'WEBP'):
             raise ValueError('Choose a JPEG, PNG, WebP, or supported HEIC photo.')
+        # iPhone JPEGs can contain an auxiliary image (for example an HDR
+        # gain map), so Pillow identifies them as MPO. Export the main photo.
+        # The JPEG cleaner drops the MPF index and ends at the first image's
+        # end marker, removing auxiliary images and their metadata as well.
         original.load()
         orientation = original.getexif().get(274, 1)
-        if original.format == 'JPEG' and orientation == 1:
+        if original.format in ('JPEG', 'MPO') and orientation == 1:
             return strip_descriptive_metadata(data), 'jpeg', original.size
         profile = original.info.get('icc_profile')
         image = ImageOps.exif_transpose(original)
