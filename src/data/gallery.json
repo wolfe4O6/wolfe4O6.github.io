@@ -1,0 +1,56 @@
+[
+  {
+    "id": "valley",
+    "src": "/images/valley.jpeg?v=2",
+    "width": 2364,
+    "height": 1330,
+    "caption": "Looking out across the valley.",
+    "alt": "A wide view across the valley, with green hills, a town, and mountains beneath a cloud-filled sky.",
+    "date": "2026-05-06"
+  },
+  {
+    "id": "forest-hills",
+    "src": "/images/forest-hills.jpeg?v=2",
+    "width": 1182,
+    "height": 664,
+    "caption": "Low clouds over the forest.",
+    "alt": "Clouds drift over dark green forested hills and a golden meadow.",
+    "date": "2026-10-10"
+  },
+  {
+    "id": "woods-device",
+    "src": "/images/woods-device.jpeg?v=2",
+    "width": 1330,
+    "height": 2364,
+    "caption": "Tech in the woods.",
+    "alt": "A hand holding a purple electronic device with an antenna in a sunlit forest.",
+    "date": ""
+  },
+  {
+    "id": "band",
+    "src": "/images/band.jpeg?v=2",
+    "width": 2364,
+    "height": 1330,
+    "caption": "From beside the band.",
+    "alt": "A view from beside a marching band, with instruments in front of crowded stadium stands.",
+    "date": "2026-09-11"
+  },
+  {
+    "id": "tower",
+    "src": "/images/tower.jpeg?v=2",
+    "width": 2364,
+    "height": 1330,
+    "caption": "A tower against the evening sky.",
+    "alt": "A communications tower rises against a pastel evening sky and a wooded ridge.",
+    "date": "2026-05-05"
+  },
+  {
+    "id": "sunset",
+    "src": "/images/sunset.jpeg?v=2",
+    "width": 2364,
+    "height": 1330,
+    "caption": "Sunset over the hills.",
+    "alt": "Golden sunlight falls across clouds, trees, and the mountain skyline.",
+    "date": "2026-04-15"
+  }
+]

@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="editor-token" content="__EDITOR_TOKEN__">
+  <title>Photos · William Kearns</title>
+  <style>
+    :root { background: #edf2e8; color: #1b392d; font: 16px/1.5 system-ui, sans-serif; }
+    * { box-sizing: border-box; }
+    body { max-width: 1120px; margin: auto; padding: 2rem clamp(1rem, 4vw, 3rem) 5rem; }
+    header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+    h1 { margin: 0; font: 500 3rem/1.1 Georgia, serif; letter-spacing: -.04em; }
+    header p { margin: .5rem 0 0; color: #4d6655; }
+    .actions { display: flex; gap: .75rem; flex-wrap: wrap; align-items: center; }
+    button, .button { border: 1px solid #9aae9a; border-radius: .5rem; padding: .65rem 1rem;
+      font: inherit; color: inherit; background: #f8faf5; cursor: pointer; min-height: 44px; }
+    button.primary { background: #1b392d; color: white; border-color: #1b392d; }
+    button:disabled { opacity: .45; cursor: default; }
+    button:hover:enabled { border-color: #1b392d; }
+    a { color: inherit; text-underline-offset: .2em; }
+    button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible {
+      outline: 2px solid #326f4a; outline-offset: 3px;
+    }
+    #status { min-height: 1.6em; margin: 1.5rem 0 1rem; color: #4d6655; white-space: pre-line; }
+    #status.error { color: #9a312e; }
+    #upload { padding: 1.25rem; border: 1px dashed #8ba18b; border-radius: .75rem; margin-bottom: 1.5rem;
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
+    #upload.dragging { background: #dce9d5; border-color: #1b392d; }
+    #upload p { margin: 0; }
+    #upload small { color: #4d6655; }
+    #list { display: grid; gap: 1.25rem; }
+    .photo-row { display: grid; grid-template-columns: minmax(150px, .65fr) minmax(0, 1fr);
+      gap: 1.5rem; padding: 1.25rem; background: #f8faf5; border: 1px solid #cad6c4; border-radius: .75rem; }
+    .thumbnail { display: flex; align-items: center; justify-content: center; height: 230px;
+      border-radius: .4rem; background: #e2eadb; overflow: hidden; }
+    .thumbnail img { display: block; max-width: 100%; max-height: 100%; object-fit: contain; }
+    .dimensions { margin: .5rem 0 0; color: #4d6655; font-size: .8rem; }
+    .fields { display: grid; gap: .8rem; align-content: start; }
+    label { display: grid; gap: .3rem; font-weight: 550; }
+    label small { font-weight: 400; color: #4d6655; }
+    input, textarea { width: 100%; background: white; color: inherit; border: 1px solid #9aae9a;
+      border-radius: .35rem; padding: .6rem; font: inherit; }
+    textarea { resize: vertical; min-height: 70px; }
+    .row-actions { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .2rem; }
+    .row-actions button { font-size: .85rem; padding: .4rem .75rem; }
+    .row-actions .remove { color: #91382e; margin-left: auto; }
+    .empty { padding: 2rem 0; color: #4d6655; }
+    #deployment-link { display: none; }
+    @media (max-width: 650px) {
+      .photo-row { grid-template-columns: minmax(0, 1fr); gap: 1rem; }
+      header { align-items: flex-start; }
+      .thumbnail { height: 200px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div><h1>Photos</h1><p id="count">Loading your photo list…</p></div>
+    <div class="actions">
+      <a href="/preview/" target="_blank" rel="noopener">Preview saved site</a>
+      <button id="save" class="primary" disabled>Save changes</button>
+      <button id="publish" disabled>Publish website</button>
+    </div>
+  </header>
+  <p id="status" role="status" aria-live="polite">Connecting to this computer…</p>
+  <a id="deployment-link" target="_blank" rel="noopener">View deployment</a>
+  <section id="upload" aria-label="Add photos">
+    <p>Drop photos here, or choose files.<br><small>Portrait and landscape photos keep their shape. Descriptive metadata is removed on import.</small></p>
+    <button id="add" disabled>Add photos</button>
+    <input id="files" type="file" accept="image/jpeg,image/png,image/webp,.heic,.heif" multiple hidden>
+  </section>
+  <div id="list"></div>
+  <script>
+    const token = document.querySelector('meta[name="editor-token"]').content;
+    const list = document.querySelector('#list');
+    const status = document.querySelector('#status');
+    const fileInput = document.querySelector('#files');
+    const saveButton = document.querySelector('#save');
+    const publishButton = document.querySelector('#publish');
+    const addButton = document.querySelector('#add');
+    const deploymentLink = document.querySelector('#deployment-link');
+    let photos = [];
+    let revision = '';
+    let dirty = false;
+    let busy = false;
+    let deploymentTimer = null;
+
+    function setStatus(message, error = false) {
+      status.textContent = message;
+      status.className = error ? 'error' : '';
+    }
+    function updateButtons() {
+      saveButton.disabled = busy || !dirty || !revision;
+      publishButton.disabled = busy || !revision;
+      addButton.disabled = busy || !revision;
+      list.querySelectorAll('button, input, textarea').forEach(element => {
+        element.disabled = busy || element.dataset.boundary === 'true';
+      });
+      document.querySelector('#count').textContent = photos.length + (photos.length === 1 ? ' photo' : ' photos');
+    }
+    function markDirty() {
+      dirty = true;
+      setStatus('Unsaved changes.');
+      updateButtons();
+    }
+    async function api(path, data) {
+      const options = data === undefined ? {} : {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Photo-Editor-Token': token },
+        body: JSON.stringify(data)
+      };
+      const response = await fetch(path, options);
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'The action could not finish.');
+      return result;
+    }
+    function makeField(title, field, photo, index, kind = 'text') {
+      const label = document.createElement('label');
+      label.textContent = title;
+      const input = document.createElement(kind === 'textarea' ? 'textarea' : 'input');
+      if (kind !== 'textarea') input.type = kind;
+      input.value = photo[field] || '';
+      input.dataset.field = field;
+      input.dataset.index = index;
+      label.append(input);
+      return label;
+    }
+    function render() {
+      list.replaceChildren();
+      if (!photos.length) {
+        const empty = document.createElement('p');
+        empty.className = 'empty';
+        empty.textContent = 'Add your first photo to get started.';
+        list.append(empty);
+      }
+      photos.forEach((photo, index) => {
+        const row = document.createElement('section');
+        row.className = 'photo-row';
+        row.setAttribute('aria-label', 'Photo ' + (index + 1));
+        const preview = document.createElement('div');
+        const thumbnail = document.createElement('a');
+        thumbnail.className = 'thumbnail';
+        thumbnail.href = photo.src;
+        thumbnail.target = '_blank';
+        thumbnail.rel = 'noopener';
+        thumbnail.setAttribute('aria-label', 'View photo ' + (index + 1));
+        const image = document.createElement('img');
+        image.src = photo.src;
+        image.alt = photo.alt || photo.caption || 'Photo preview';
+        thumbnail.append(image);
+        preview.append(thumbnail);
+        const dimensions = document.createElement('p');
+        dimensions.className = 'dimensions';
+        dimensions.textContent = photo.width + ' × ' + photo.height;
+        preview.append(dimensions);
+        const fields = document.createElement('div');
+        fields.className = 'fields';
+        fields.append(makeField('Caption', 'caption', photo, index, 'textarea'));
+        fields.append(makeField('Date (optional)', 'date', photo, index, 'date'));
+        const description = makeField('Image description', 'alt', photo, index);
+        const help = document.createElement('small');
+        help.textContent = 'Describe the photo for someone using a screen reader.';
+        description.append(help);
+        fields.append(description);
+        const actions = document.createElement('div');
+        actions.className = 'row-actions';
+        [['Move up', 'up', index === 0], ['Move down', 'down', index === photos.length - 1],
+          ['Remove', 'remove', false]].forEach(([text, action, boundary]) => {
+          const button = document.createElement('button');
+          button.textContent = text;
+          button.dataset.action = action;
+          button.dataset.index = index;
+          button.dataset.boundary = String(boundary);
+          if (action === 'remove') button.className = 'remove';
+          actions.append(button);
+        });
+        fields.append(actions);
+        row.append(preview, fields);
+        list.append(row);
+      });
+      updateButtons();
+    }
+    list.addEventListener('input', event => {
+      const input = event.target;
+      if (!input.dataset.field) return;
+      photos[Number(input.dataset.index)][input.dataset.field] = input.value;
+      markDirty();
+    });
+    list.addEventListener('click', event => {
+      const button = event.target.closest('button[data-action]');
+      if (!button || busy) return;
+      const index = Number(button.dataset.index);
+      const action = button.dataset.action;
+      if (action === 'remove') photos.splice(index, 1);
+      if (action === 'up' && index > 0) [photos[index - 1], photos[index]] = [photos[index], photos[index - 1]];
+      if (action === 'down' && index < photos.length - 1) [photos[index + 1], photos[index]] = [photos[index], photos[index + 1]];
+      markDirty();
+      render();
+    });
+    async function save() {
+      const result = await api('/api/save', { photos, revision });
+      photos = result.photos;
+      revision = result.revision;
+      dirty = false;
+      render();
+      setStatus(result.warnings.length ? result.warnings.join('\n') : 'Saved on this computer. Publish when you’re ready.', Boolean(result.warnings.length));
+    }
+    saveButton.addEventListener('click', async () => {
+      busy = true;
+      updateButtons();
+      try { await save(); }
+      catch (error) { setStatus(error.message, true); }
+      finally { busy = false; updateButtons(); }
+    });
+    async function checkDeployment(commit) {
+      try {
+        const result = await api('/api/deployment?commit=' + encodeURIComponent(commit));
+        if (result.url) {
+          deploymentLink.href = result.url;
+          deploymentLink.style.display = 'inline-block';
+        }
+        if (result.status === 'completed') {
+          busy = false;
+          updateButtons();
+          if (result.conclusion === 'success') {
+            setStatus('Published. Your photos are live on williamkearns.org.');
+          } else {
+            setStatus('GitHub could not deploy the update. Open the deployment for details.', true);
+          }
+          return;
+        }
+        setStatus('GitHub is building and publishing your photos…');
+        deploymentTimer = setTimeout(() => checkDeployment(commit), 5000);
+      } catch (error) {
+        busy = false;
+        updateButtons();
+        setStatus(error.message, true);
+      }
+    }
+    publishButton.addEventListener('click', async () => {
+      busy = true;
+      updateButtons();
+      clearTimeout(deploymentTimer);
+      try {
+        if (dirty) await save();
+        setStatus('Sending your saved photos to GitHub…');
+        const result = await api('/api/publish', {});
+        await checkDeployment(result.commit);
+      } catch (error) {
+        busy = false;
+        updateButtons();
+        setStatus(error.message, true);
+      }
+    });
+    function readFile(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve({ name: file.name, data: reader.result.split(',')[1] });
+        reader.onerror = () => reject(new Error('Could not read ' + file.name));
+        reader.readAsDataURL(file);
+      });
+    }
+    async function importFiles(files) {
+      if (busy || !files.length) return;
+      busy = true;
+      updateButtons();
+      setStatus('Adding photos and removing their descriptive metadata…');
+      try {
+        const encoded = await Promise.all(Array.from(files, readFile));
+        const result = await api('/api/import', { files: encoded });
+        const known = new Set(photos.map(photo => photo.id));
+        const additions = result.photos.filter(photo => {
+          if (known.has(photo.id)) return false;
+          known.add(photo.id);
+          return true;
+        });
+        photos.push(...additions);
+        if (additions.length) dirty = true;
+        render();
+        setStatus(result.errors.length ? result.errors.join('\n') :
+          additions.length ? 'Photos added. Add captions, then save your changes.' : 'Those photos are already in your list.',
+          Boolean(result.errors.length));
+      } catch (error) { setStatus(error.message, true); }
+      finally { busy = false; updateButtons(); fileInput.value = ''; }
+    }
+    addButton.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', () => importFiles(fileInput.files));
+    const upload = document.querySelector('#upload');
+    upload.addEventListener('dragover', event => { event.preventDefault(); upload.classList.add('dragging'); });
+    upload.addEventListener('dragleave', () => upload.classList.remove('dragging'));
+    upload.addEventListener('drop', event => {
+      event.preventDefault();
+      upload.classList.remove('dragging');
+      importFiles(event.dataTransfer.files);
+    });
+    window.addEventListener('beforeunload', event => {
+      if (dirty) { event.preventDefault(); event.returnValue = ''; }
+    });
+    api('/api/state').then(result => {
+      photos = result.photos;
+      revision = result.revision;
+      render();
+      setStatus('Edit captions and dates, move photos into order, or add more photos.');
+    }).catch(error => setStatus(error.message, true));
+  </script>
+</body>
+</html>
