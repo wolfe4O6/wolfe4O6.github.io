@@ -90,7 +90,7 @@
         used.add(index); bind(button,index);
       });
       allButtons.forEach((button,i)=>{button.hidden=i>=desired;});
-      world=new PhotoWorld({width,height,sizes:buttons.map((button,i)=>size(Number(button.dataset.index),i)),
+      world=new PhotoFlow({width,height,sizes:buttons.map((button,i)=>size(Number(button.dataset.index),i)),
         zones:text.map(node=>node.getBoundingClientRect())});
       cursor=desired%gallery.length;
     } else if (Math.abs(width-world.width)>1 || Math.abs(height-world.height)>1) {
@@ -127,7 +127,8 @@
     world.bodies.forEach(body=>{
       const button=buttons[body.id];
       button.style.transform=`translate3d(${body.x.toFixed(2)}px,${body.y.toFixed(2)}px,0)`;
-      button.style.opacity=body.state==='exited'?'0':String(1-body.gray*.76);
+      button.style.opacity=body.state==='exited'?'0':String((1-body.gray*.76)*body.fade);
+      button.style.pointerEvents=body.fade<.05 || body.state==='exited'?'none':'';
       button.style.filter=body.gray>.015?`saturate(${1-body.gray*.8}) blur(${body.gray*2.5}px)`:'none';
     });
   }
@@ -204,11 +205,6 @@
   }
   allButtons.forEach((button,slot)=>{
     button.addEventListener('click',()=>showPhoto(Number(button.dataset.index),button));
-    button.addEventListener('pointerenter',event=>{if(event.pointerType==='mouse'&&world.bodies[slot]){world.bodies[slot].held=true;world.bodies[slot].holdUntil=world.time+.8;}});
-    button.addEventListener('pointerleave',()=>{if(world.bodies[slot])world.bodies[slot].held=false;});
-    button.addEventListener('pointerdown',()=>{if(world.bodies[slot]){world.bodies[slot].held=true;world.bodies[slot].holdUntil=world.time+1.2;}});
-    for (const type of ['pointerup','pointercancel','blur']) button.addEventListener(type,()=>{if(world.bodies[slot])world.bodies[slot].held=false;});
-    button.addEventListener('focus',()=>{if(world.bodies[slot]&&button.matches(':focus-visible')){world.bodies[slot].held=true;world.bodies[slot].holdUntil=Infinity;}});
   });
   browse.addEventListener('click',()=>showPhoto(0));
   viewer.querySelector('.viewer-close').addEventListener('click',closeViewer);
@@ -222,7 +218,6 @@
   viewer.addEventListener('close',()=>{
     request++;closing=false;inspection=false;viewer.classList.remove('is-closing');
     if (origin) origin.style.visibility='';origin=null;
-    world.bodies.forEach(body=>{body.held=false;});
     geometryDirty=true;run();
   });
   addEventListener('scroll',()=>{

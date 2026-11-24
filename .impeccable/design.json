@@ -107,33 +107,28 @@
       },
       {
         "name": "photo-world",
-        "value": "five bodies below 700px; seven at larger widths; fixed 1/120s substeps; bounded velocity",
-        "purpose": "Continuous authored magnetic motion without an external library; fewer bodies for small galleries."
+        "value": "five slots / two lanes below 700px; seven slots / three lanes at larger widths; shared upward speed 23 / 29px/s; frame delta capped at .05s",
+        "purpose": "Authored upward flow with fewer slots for small galleries; no collision response, wall bounces, photo/text forces, or individual hover holds."
       },
       {
         "name": "photo-separation",
-        "value": "14px phone / 24px desktop AABB gap",
-        "purpose": "Strong photo-to-photo separation with weaker text repulsion and temporary muted, translucent blur."
+        "value": "14px phone / 24px desktop lane gap; sway ≤18px / 32px and ≤7.5% lane width; sin(time × .22 + slot × 1.8)",
+        "purpose": "Natural proportions fit each lane; shared spacing and staggered phases keep photographs separated while text overlap changes shading only."
       },
       {
         "name": "scroll-impulse",
-        "value": "input capped at \u00b1180px; accumulated boost capped at \u00b152; decays over active time",
-        "purpose": "Native scrolling changes velocity independently of lifetime time."
+        "value": "input capped at ±180px × .12; shared speed boost clamped to [−16,+42]px/s; exponential decay 2.5/s; upward speed ≥7px/s",
+        "purpose": "Native wheel and scroll adjust common upward speed during active motion."
       },
       {
         "name": "retirement-eligibility",
-        "value": "normally \u22659s visible for clear photos; continuous gray >3.2s permits earlier exit",
-        "purpose": "Visibility budget can defer departure; maintain three visible residents on phones and four on desktop when enough gallery exists."
+        "value": "gray >.5 continuously for >3.2s; nonretired visible residents > target 3 phone / 4 desktop, capped by gallery size; fade 1.2s",
+        "purpose": "Resident targets gate retirement, not an always-visible count. Retirement stays latched until the next cycle; no minimum clear-photo lifetime."
       },
       {
         "name": "replacement-gate",
-        "value": "fully offscreen old photo + decoded next asset",
-        "purpose": "Rebind only outside the viewport, then re-enter; no visible source flashes."
-      },
-      {
-        "name": "target-hold",
-        "value": "hover .8s; pointer-down 1.2s; visible keyboard focus until blur",
-        "purpose": "Only the targeted photo holds; all other field photos continue."
+        "value": "old photo fully above viewport −48px + decoded next asset; re-entry below viewport +48px",
+        "purpose": "Rebind only offscreen. Reserved slot phase continues during decoding; delayed loads skip a circuit when needed to prevent visible source flashes."
       },
       {
         "name": "viewer-flip",
@@ -228,7 +223,7 @@
     ],
     "dos": [
       "**Do** preserve the sage and evergreen identity, Georgia name, original photo colors, and contact logos.",
-      "**Do** preserve natural photo proportions, five phone / seven desktop active bodies, and the visible-resident budget.",
+      "**Do** preserve natural photo proportions, five phone / seven desktop slots, shared upward flow with sideways sway, and the retirement-resident gate.",
       "**Do** maintain visible focus, keyboard browsing, reduced motion, hidden-document suspension, and optional dates.",
       "**Do** derive the local saved preview from production source and keep gallery edge cases working."
     ],

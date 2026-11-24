@@ -111,7 +111,7 @@ def render_preview(repo, preview, gallery):
         lambda match: viewer, source, flags=re.S)
     if '<!-- PHOTO_MOTION_START -->' in source:
         motion = '\n'.join((repo / 'src/scripts' / name).read_text()
-            for name in ['photo-physics.js', 'photo-controller.js'])
+            for name in ['photo-flow.js', 'photo-controller.js'])
         source = re.sub(r'<!-- PHOTO_MOTION_START -->.*?<!-- PHOTO_MOTION_END -->',
             lambda match: '<script>' + motion + '</script>', source, flags=re.S)
     for photo in gallery:

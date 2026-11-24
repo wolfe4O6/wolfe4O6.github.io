@@ -111,9 +111,9 @@ At the narrow breakpoint, the name uses `clamp(4.3rem,18vw,6.5rem)` with .97 lin
 
 The fixed photo field fills the viewport behind a normally scrolling page. The hero and about sections each occupy at least `100svh`. The identity column is at most 36rem, the introduction 28rem, and about copy 34rem. Navigation stays fixed above a softly fading blurred ground: About at left, GitHub and Email at right. Browse photos sits near the bottom center of the opening viewport.
 
-At `46rem` and below, the identity narrows to 25rem, intro to 20rem, and about copy to 28rem. Navigation becomes 4.5rem tall with 1.25rem side padding. The motion controller uses five active photo bodies below 700px and seven at larger widths, limited by gallery size. Natural proportions are retained; viewport-aware dimensions leave room for magnetic separation. The unscripted fallback retains its portrait height cap of 65svh.
+At `46rem` and below, the identity narrows to 25rem, intro to 20rem, and about copy to 28rem. Navigation becomes 4.5rem tall with 1.25rem side padding. The motion controller uses five photo slots in two lanes below 700px and seven slots in three lanes at larger widths, limited by gallery size. Natural proportions are retained; viewport-aware dimensions fit within the lanes. Shared upward speed, staggered phases, and lane spacing keep the composition separated. The unscripted fallback retains its portrait height cap of 65svh.
 
-Additional saved photographs rotate through those bodies, never accumulate as overlapping layers. Keep at least three visible residents on phones and four on desktop when enough photographs exist; this visibility budget can defer retirement. Empty galleries hide the field and Browse photos while preserving readable content; a single photo remains inspectable.
+Additional saved photographs rotate through those slots, never accumulate as overlapping layers. Targets of three residents on phones and four on desktop gate gray-photo retirement when the gallery is large enough; they are not guaranteed visible counts as photographs travel through the viewport. Empty galleries hide the field and Browse photos while preserving readable content; a single photo remains inspectable.
 
 ## Elevation & Depth
 
@@ -133,11 +133,15 @@ Text links use inline GitHub and Email logos, underline on hover, and at least 4
 
 ### Photo field
 
-A small authored physics engine moves photographs continuously using bounded velocities and fixed substeps, with no external library. Axis-aligned photo rectangles repel strongly with a 14px gap below 700px and 24px on larger screens. Weaker text repulsion allows temporary muted, translucent, softly blurred photographs around measured reading zones. Capped wheel and scroll impulses affect velocity without advancing the lifetime clock; native page scrolling continues.
+A small authored flow moves all photographs upward at a shared speed (23px/s below 700px; 29px/s at larger widths), with sideways sinusoidal sway (`sin(time × .22 + slot × 1.8)`) capped at 18px on phones and 32px on larger screens, further limited by lane width. Lane spacing uses a 14px phone / 24px desktop gap. Photographs retain natural proportions and level edges; shared spacing replaces collision response, wall bounces, and forces between photographs or text. Hover, pointer-down, and focus do not hold individual photographs.
 
-Clear photographs normally receive at least 9 seconds of visible time before retirement eligibility. Continuous gray for 3.2 seconds makes a photograph eligible to leave sooner, subject to the visibility budget. Replacement happens only after the old photograph is fully outside the viewport and the next asset is decoded; update its source, accessible label, dimensions, and aspect ratio there, then move it back into the field. Failed loads do not replace a photograph with a broken image. Every saved photo remains directly available in the viewer.
+Capped wheel and scroll impulses adjust a shared speed boost: each input is clamped to ±180px, multiplied by .12, and accumulated within −16 to +42px/s. The boost decays exponentially at 2.5/s of active time; upward speed never falls below 7px/s. Native page scrolling continues. Frame deltas are capped at .05 seconds.
 
-Pointer inspection holds only its targeted photograph: mouse hover expires after .8 seconds, pointer-down after 1.2 seconds, and visible keyboard focus holds until blur. Other photographs continue moving. An open viewer pauses the field. Hidden documents cancel the animation loop; resumption resets the frame timestamp. Reduced motion stops continuous movement and automatic rotation, removes CSS transitions and smooth scrolling, retains scroll-responsive shading of a static field, and uses a brief opacity-only viewer transition.
+Measured overlap with reading zones controls muted, translucent, softly blurred shading without changing a photograph's path. Continuous gray above .5 for more than 3.2 seconds permits retirement only while the number of nonretired visible residents exceeds the target (three phone / four desktop, limited by gallery size). Retirement fades over 1.2 seconds and remains latched until the next cycle; moving clear of text cannot make a retired image reappear. The targets govern this fade, rather than impose a minimum count throughout travel.
+
+Replacement happens only after the old photograph is fully above the viewport with a 48px margin and the next asset is decoded. Update its source, accessible label, dimensions, and aspect ratio there, then re-enter below the viewport with a 48px margin. Every slot preserves its reserved phase while awaiting decoding; a delayed replacement skips a circuit when needed to keep its entry below the screen. Failed loads do not replace a photograph with a broken image. Every saved photo remains directly available in the viewer.
+
+An open viewer pauses the field. Hidden documents cancel the animation loop; resumption resets the frame timestamp. Reduced motion stops continuous movement and automatic rotation, removes CSS transitions and smooth scrolling, retains scroll-responsive shading of a static field, and uses a brief opacity-only viewer transition.
 
 ### Photo viewer
 
@@ -145,7 +149,7 @@ Use the native modal dialog, original image proportions, caption, optional date,
 
 ### Gallery and local preview maintenance
 
-`src/data/gallery.json` is the sole gallery source; `src/pages/index.astro` owns production markup and styles and inlines the raw `src/scripts/photo-physics.js` and `src/scripts/photo-controller.js` sources. `Manage Photos.command` launches the local editor. Its `tools/photo-editor/library.py` renderer derives preview HTML from the production source and substitutes saved gallery content between the `GALLERY`, `VIEWER_IMAGE`, and `GALLERY_DATA` marker pairs. It embeds the same two raw motion scripts between `PHOTO_MOTION` markers. Preserve these markers and keep the Python slot allocation synchronized with the Astro frontmatter when changing gallery rendering. Do not create a separate preview design.
+`src/data/gallery.json` is the sole gallery source; `src/pages/index.astro` owns production markup and styles and inlines the raw `src/scripts/photo-flow.js` and `src/scripts/photo-controller.js` sources. `Manage Photos.command` launches the local editor. Its `tools/photo-editor/library.py` renderer derives preview HTML from the production source and substitutes saved gallery content between the `GALLERY`, `VIEWER_IMAGE`, and `GALLERY_DATA` marker pairs. It embeds the same two raw motion scripts between `PHOTO_MOTION` markers. `src/scripts/photo-physics.js` remains a compatible copy of the flow for older running editor instances; the current production and preview renderers load `photo-flow.js`. Preserve these markers and keep the Python slot allocation synchronized with the Astro frontmatter when changing gallery rendering. Do not create a separate preview design.
 
 The editor continues to manage order, captions, dates, image descriptions, imports, removals, saved preview, and publication. Its row-level Crop action opens a native modal with a dimmed image outside a white selection, a thirds grid, and four corner handles with 44px targets. The selection supports dragging, corner resizing, arrow keys (Shift for ten pixels), aspect-ratio presets, and pixel fields. On narrow screens the ratio fills its own row, pixel fields use two columns, and footer actions wrap. Keep these controls within the editor's existing sage, evergreen, and system-sans utility treatment; they do not change the homepage tokens.
 
@@ -155,7 +159,7 @@ Apply crop updates the working photo; Save changes updates the gallery and saved
 
 ### Do:
 - **Do** preserve the sage and evergreen identity, Georgia name, original photo colors, and contact logos.
-- **Do** preserve natural photo proportions, five phone / seven desktop active bodies, and the visible-resident budget.
+- **Do** preserve natural photo proportions, five phone / seven desktop slots, shared upward flow with sideways sway, and the retirement-resident gate.
 - **Do** maintain visible focus, keyboard browsing, reduced motion, hidden-document suspension, and optional dates.
 - **Do** derive the local saved preview from production source and keep gallery edge cases working.
 

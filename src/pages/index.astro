@@ -1,6 +1,6 @@
 ---
 import gallery from '../data/gallery.json';
-import physicsSource from '../scripts/photo-physics.js?raw';
+import flowSource from '../scripts/photo-flow.js?raw';
 import controllerSource from '../scripts/photo-controller.js?raw';
 
 // Keep small galleries around the readable center rather than above it.
@@ -200,7 +200,7 @@ const slots = gallery.length >= 7 ? [0, 1, 2, 3, 4, 5, 6]
   <script is:inline type="application/json" id="gallery-data" set:html={JSON.stringify(gallery).replaceAll('<', '\\u003c')}></script>
   <!-- GALLERY_DATA_END -->
   <!-- PHOTO_MOTION_START -->
-  <script is:inline set:html={physicsSource + '\n' + controllerSource}></script>
+  <script is:inline set:html={flowSource + '\n' + controllerSource}></script>
   <!-- PHOTO_MOTION_END -->
 </body>
 </html>
