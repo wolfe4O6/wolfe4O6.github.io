@@ -9,6 +9,15 @@
     "date": "2026-05-06"
   },
   {
+    "id": "tower",
+    "src": "/images/tower.jpeg?v=2",
+    "width": 2364,
+    "height": 1330,
+    "caption": "A tower against the evening sky.",
+    "alt": "A communications tower rises against a pastel evening sky and a wooded ridge.",
+    "date": "2026-05-05"
+  },
+  {
     "id": "forest-hills",
     "src": "/images/forest-hills.jpeg?v=2",
     "width": 1182,
@@ -16,15 +25,6 @@
     "caption": "Low clouds over the forest.",
     "alt": "Clouds drift over dark green forested hills and a golden meadow.",
     "date": "2026-10-10"
-  },
-  {
-    "id": "woods-device",
-    "src": "/images/woods-device.jpeg?v=2",
-    "width": 1330,
-    "height": 2364,
-    "caption": "Tech in the woods.",
-    "alt": "A hand holding a purple electronic device with an antenna in a sunlit forest.",
-    "date": ""
   },
   {
     "id": "band",
@@ -36,15 +36,6 @@
     "date": "2026-09-11"
   },
   {
-    "id": "tower",
-    "src": "/images/tower.jpeg?v=2",
-    "width": 2364,
-    "height": 1330,
-    "caption": "A tower against the evening sky.",
-    "alt": "A communications tower rises against a pastel evening sky and a wooded ridge.",
-    "date": "2026-05-05"
-  },
-  {
     "id": "sunset",
     "src": "/images/sunset.jpeg?v=2",
     "width": 2364,
@@ -52,5 +43,14 @@
     "caption": "Sunset over the hills.",
     "alt": "Golden sunlight falls across clouds, trees, and the mountain skyline.",
     "date": "2026-04-15"
+  },
+  {
+    "id": "img-7545-76df63b32978ab77",
+    "src": "/images/img-7545-76df63b32978ab77.jpeg",
+    "width": 1560,
+    "height": 1170,
+    "caption": "Post race glory.",
+    "alt": "Me after I PRed at NXR northwest 2026 running a 20:09 5K!",
+    "date": "2026-11-20"
   }
 ]
