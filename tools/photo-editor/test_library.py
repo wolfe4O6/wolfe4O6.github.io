@@ -198,6 +198,9 @@ class LibraryTests(unittest.TestCase):
     def test_actual_homepage_renders_without_astro_expressions(self):
         source = Path(__file__).resolve().parents[2] / 'src/pages/index.astro'
         (self.repo / 'src/pages/index.astro').write_text(source.read_text())
+        (self.repo / 'src/scripts').mkdir()
+        for name in ['photo-physics.js', 'photo-controller.js']:
+            (self.repo / 'src/scripts' / name).write_text((source.parent.parent / 'scripts' / name).read_text())
         self.library.save([self.add_photo()], self.library.state()['revision'])
         html = (self.library.preview / 'index.html').read_text()
         self.assertNotIn('hidden={!gallery.length}', html)
@@ -205,6 +208,8 @@ class LibraryTests(unittest.TestCase):
         self.assertNotIn('set:html', html)
         self.assertNotIn('is:inline', html)
         self.assertNotIn('is:global', html)
+        self.assertNotIn('set:html', html)
+        self.assertIn('class PhotoWorld', html)
         self.assertEqual(len(json.loads(GalleryHTML(html).data)), 1)
 
     def test_path_traversal_and_invalid_dates_are_rejected(self):

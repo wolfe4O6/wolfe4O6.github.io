@@ -108,6 +108,11 @@ def render_preview(repo, preview, gallery):
         viewer = f'<img class="viewer-image" src="{escape(data[0]["src"], quote=True)}" alt="{escape(data[0]["alt"], quote=True)}">'
     source = re.sub(r'<!-- VIEWER_IMAGE_START -->.*?<!-- VIEWER_IMAGE_END -->',
         lambda match: viewer, source, flags=re.S)
+    if '<!-- PHOTO_MOTION_START -->' in source:
+        motion = '\n'.join((repo / 'src/scripts' / name).read_text()
+            for name in ['photo-physics.js', 'photo-controller.js'])
+        source = re.sub(r'<!-- PHOTO_MOTION_START -->.*?<!-- PHOTO_MOTION_END -->',
+            lambda match: '<script>' + motion + '</script>', source, flags=re.S)
     for photo in gallery:
         original = image_path(repo, photo['src'])
         destination = preview / 'images' / original.name

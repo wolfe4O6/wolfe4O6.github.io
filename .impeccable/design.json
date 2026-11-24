@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-24T15:59:09+00:00",
+  "generatedAt": "2026-11-24T20:23:53.965039+00:00",
   "title": "Design System: William Kearns",
   "extensions": {
     "colorMeta": {
@@ -106,24 +106,54 @@
         "purpose": "Hover shadow transition."
       },
       {
-        "name": "photo-rise-speeds",
-        "value": "5.3, 7, 4.4, 6.2, 8.1, 5.7, 4.8 px per active second",
-        "purpose": "Independent desktop slot drift before wheel and scroll influence."
+        "name": "photo-world",
+        "value": "five bodies below 700px; seven at larger widths; fixed 1/120s substeps; bounded velocity",
+        "purpose": "Continuous authored magnetic motion without an external library; fewer bodies for small galleries."
       },
       {
-        "name": "replacement-delay",
-        "value": "14s",
-        "purpose": "Active animation time between extra-gallery replacements."
+        "name": "photo-separation",
+        "value": "14px phone / 24px desktop AABB gap",
+        "purpose": "Strong photo-to-photo separation with weaker text repulsion and temporary muted, translucent blur."
       },
       {
-        "name": "replacement-fade",
-        "value": "350ms out, 350ms in",
-        "purpose": "One preloaded replacement at a time."
+        "name": "scroll-impulse",
+        "value": "input capped at \u00b1180px; accumulated boost capped at \u00b152; decays over active time",
+        "purpose": "Native scrolling changes velocity independently of lifetime time."
+      },
+      {
+        "name": "retirement-eligibility",
+        "value": "normally \u22659s visible for clear photos; continuous gray >3.2s permits earlier exit",
+        "purpose": "Visibility budget can defer departure; maintain three visible residents on phones and four on desktop when enough gallery exists."
+      },
+      {
+        "name": "replacement-gate",
+        "value": "fully offscreen old photo + decoded next asset",
+        "purpose": "Rebind only outside the viewport, then re-enter; no visible source flashes."
+      },
+      {
+        "name": "target-hold",
+        "value": "hover .8s; pointer-down 1.2s; visible keyboard focus until blur",
+        "purpose": "Only the targeted photo holds; all other field photos continue."
+      },
+      {
+        "name": "viewer-flip",
+        "value": "520ms open / 280ms close; cubic-bezier(.16,1,.3,1)",
+        "purpose": "Clicked source rectangle enlarges to the center; interrupted enlargement reverses from its current frame."
+      },
+      {
+        "name": "viewer-backdrop",
+        "value": "97% sage; 22px blur; 420ms enter / 280ms leave",
+        "purpose": "Nearly opaque blurred inspection ground."
+      },
+      {
+        "name": "edge-blend",
+        "value": "14px navigation blur; 9px screen-edge blur; fading masks",
+        "purpose": "Soft navigation and viewport edges without a hard cutoff."
       },
       {
         "name": "motion-gates",
-        "value": "pause on mouse inspection, visible field focus, open viewer; stop loop when hidden or reduced motion",
-        "purpose": "Preserve inspection, accessibility, and hidden-document suspension."
+        "value": "open viewer pauses field; hidden document cancels loop and resets timestamp; reduced motion keeps static scroll-responsive shading",
+        "purpose": "Reduced motion disables automatic rotation and CSS motion, with a 100ms opacity-only viewer path."
       }
     ],
     "breakpoints": [
@@ -138,9 +168,9 @@
       "name": "Contact navigation",
       "kind": "nav",
       "refersTo": "navigation",
-      "description": "Opaque navigation with About at left and contact links at right; specimen fits its container.",
+      "description": "Fading blurred navigation with About at left and contact links at right; specimen fits its container.",
       "html": "<nav class=\"ds-navigation\" aria-label=\"Navigation\"><a class=\"ds-about\" href=\"#about\">About</a><a href=\"https://github.com/wolfe4O6\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577v-2.04c-3.338.724-4.042-1.416-4.042-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.09-.745.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22v3.286c0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12\"/></svg>GitHub</a><a href=\"mailto:wk@williamkearns.org\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\"><rect x=\"3\" y=\"5\" width=\"18\" height=\"14\" rx=\"2\"/><path d=\"m3 7 9 6 9-6\"/></svg>Email</a></nav>",
-      "css": ".ds-navigation{display:flex;align-items:center;gap:1.7rem;height:5rem;padding:0 2.5rem;background:var(--ground,#edf2e8);color:var(--ink,#1b392d);font-family:system-ui,sans-serif}.ds-navigation a{display:inline-flex;align-items:center;gap:.5rem;min-height:44px;font-size:.95rem;text-decoration:none;color:inherit;text-underline-offset:.25em}.ds-navigation a:hover{text-decoration:underline}.ds-navigation a:focus-visible{outline:2px solid var(--focus,#294f3d);outline-offset:5px}.ds-navigation .ds-about{margin-right:auto}.ds-navigation svg{width:1.15rem;height:1.15rem}.ds-navigation a:first-of-type+ a svg{fill:currentColor}@media(max-width:46rem){.ds-navigation{height:4.5rem;gap:1.2rem;padding:0 1.25rem}.ds-navigation a{font-size:.9rem}}"
+      "css": ".ds-navigation{display:flex;align-items:center;gap:1.7rem;height:5rem;padding:0 2.5rem;position:relative;isolation:isolate;background:transparent;color:var(--ink,#1b392d);font-family:system-ui,sans-serif}.ds-navigation a{display:inline-flex;align-items:center;gap:.5rem;min-height:44px;font-size:.95rem;text-decoration:none;color:inherit;text-underline-offset:.25em}.ds-navigation a:hover{text-decoration:underline}.ds-navigation a:focus-visible{outline:2px solid var(--focus,#294f3d);outline-offset:5px}.ds-navigation .ds-about{margin-right:auto}.ds-navigation svg{width:1.15rem;height:1.15rem}.ds-navigation a:first-of-type+ a svg{fill:currentColor}@media(max-width:46rem){.ds-navigation{height:4.5rem;gap:1.2rem;padding:0 1.25rem}.ds-navigation a{font-size:.9rem}}.ds-navigation::before{content:\"\";position:absolute;z-index:-1;inset:0 0 -2.5rem;background:linear-gradient(var(--ground,#edf2e8),rgba(237,242,232,.92) 40%,rgba(237,242,232,0));-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);-webkit-mask-image:linear-gradient(black 40%,transparent);mask-image:linear-gradient(black 40%,transparent);pointer-events:none}"
     },
     {
       "name": "Browse photos",
@@ -198,7 +228,7 @@
     ],
     "dos": [
       "**Do** preserve the sage and evergreen identity, Georgia name, original photo colors, and contact logos.",
-      "**Do** preserve natural photo proportions, the portrait height cap, and the seven-slot limit.",
+      "**Do** preserve natural photo proportions, five phone / seven desktop active bodies, and the visible-resident budget.",
       "**Do** maintain visible focus, keyboard browsing, reduced motion, hidden-document suspension, and optional dates.",
       "**Do** derive the local saved preview from production source and keep gallery edge cases working."
     ],
@@ -206,7 +236,7 @@
       "**Don't** add a navigation divider or a visible pause-photos control.",
       "**Don't** add embedded metadata to the user's photographs; keep any provenance outside the image files.",
       "**Don't** substitute a new visual direction for the approved photo field or make text drift with the photographs.",
-      "**Don't** duplicate gallery data or pile additional photos onto occupied field slots."
+      "**Don't** duplicate gallery data, replace visible photographs, or pile additional photos onto occupied field bodies."
     ]
   }
 }

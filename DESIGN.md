@@ -46,7 +46,7 @@ spacing:
   navigation-inset: "2.5rem"
 components:
   navigation:
-    backgroundColor: "{colors.ground}"
+    backgroundColor: "transparent"
     textColor: "{colors.ink}"
     typography: "{typography.label}"
     height: "5rem"
@@ -92,7 +92,7 @@ The palette inherits its green character from the established homepage. Frontmat
 - **Evergreen Ink:** name, headings, body text, navigation, and viewer controls.
 
 ### Neutral
-- **Sage Ground:** page canvas and opaque navigation; also the basis of the translucent viewer backdrop.
+- **Sage Ground:** page canvas, fading navigation ground, and nearly opaque viewer backdrop.
 - **Muted Woodland:** dates, counts, and footer text.
 - **Deep Focus Green:** keyboard focus outlines.
 
@@ -109,15 +109,15 @@ At the narrow breakpoint, the name uses `clamp(4.3rem,18vw,6.5rem)` with .97 lin
 
 ## Layout
 
-The fixed photo field fills the viewport behind a normally scrolling page. The hero and about sections each occupy at least `100svh`. The identity column is at most 36rem, the introduction 28rem, and about copy 34rem. An opaque navigation bar stays fixed above the field: About at left, GitHub and Email at right. Browse photos sits near the bottom center of the opening viewport.
+The fixed photo field fills the viewport behind a normally scrolling page. The hero and about sections each occupy at least `100svh`. The identity column is at most 36rem, the introduction 28rem, and about copy 34rem. Navigation stays fixed above a softly fading blurred ground: About at left, GitHub and Email at right. Browse photos sits near the bottom center of the opening viewport.
 
-At `46rem` and below, the identity narrows to 25rem, intro to 20rem, and about copy to 28rem. Navigation becomes 4.5rem tall with 1.25rem side padding. Seven viewport-relative photo positions preserve imagery at the edges and space around the reading center. Field photo width is capped by `65svh × aspect ratio`, so portraits cannot grow taller than 65svh; images retain their proportions.
+At `46rem` and below, the identity narrows to 25rem, intro to 20rem, and about copy to 28rem. Navigation becomes 4.5rem tall with 1.25rem side padding. The motion controller uses five active photo bodies below 700px and seven at larger widths, limited by gallery size. Natural proportions are retained; viewport-aware dimensions leave room for magnetic separation. The unscripted fallback retains its portrait height cap of 65svh.
 
-Use at most seven field slots, never one overlapping layer per saved photo. For fewer photos, use the source's deliberate slot allocation: three photos occupy slots 2, 3, and 5; other small galleries take from 2, 3, 1, 4, 5, 6. With seven or more, use slots 0–6. Galleries larger than seven rotate additional images through existing slots one at a time. Empty galleries hide the field and Browse photos while preserving readable content; a single photo remains inspectable.
+Additional saved photographs rotate through those bodies, never accumulate as overlapping layers. Keep at least three visible residents on phones and four on desktop when enough photographs exist; this visibility budget can defer retirement. Empty galleries hide the field and Browse photos while preserving readable content; a single photo remains inspectable.
 
 ## Elevation & Depth
 
-Photographs use a restrained ambient shadow, deepening on hover. Measured overlap with text and interactive reading zones fades and softly blurs the photograph; keep text steady. The native viewer has a translucent sage backdrop with 14px blur. Exact shadow and motion values live in `.impeccable/design.json`.
+Photographs use a restrained ambient shadow, deepening on hover. Measured overlap with text and interactive reading zones fades and softly blurs the photograph; keep text steady. Navigation fades through a 14px blurred gradient; screen edges fade through 9px blur rather than a hard horizontal cutoff. The native viewer uses a 97% opaque sage backdrop with 22px blur. Exact shadow and motion values live in `.impeccable/design.json`.
 
 **The Steady Center Rule.** Photographs recede around measured reading zones; text does not move to accommodate them.
 
@@ -133,17 +133,19 @@ Text links use inline GitHub and Email logos, underline on hover, and at least 4
 
 ### Photo field
 
-Desktop imagery drifts upward at independent speeds with slight lateral oscillation. Wheel input changes drift velocity while native page scrolling continues. Phone movement stays bounded. Hover inspection, visible photo focus, and an open viewer pause the field. Hidden documents stop the animation loop. Reduced motion stops continuous movement and automatic rotation, removes transitions and smooth scrolling, and retains a scroll-responsive static field.
+A small authored physics engine moves photographs continuously using bounded velocities and fixed substeps, with no external library. Axis-aligned photo rectangles repel strongly with a 14px gap below 700px and 24px on larger screens. Weaker text repulsion allows temporary muted, translucent, softly blurred photographs around measured reading zones. Capped wheel and scroll impulses affect velocity without advancing the lifetime clock; native page scrolling continues.
 
-For extra photos, preload the next image, fade out one slot for .35 seconds, update its source, accessible label, dimensions and aspect ratio, then fade in for .35 seconds. Schedule the next replacement after 14 seconds of active animation time. Failed loads leave the existing photograph intact. Every saved photo remains directly available in the viewer, including with reduced motion enabled.
+Clear photographs normally receive at least 9 seconds of visible time before retirement eligibility. Continuous gray for 3.2 seconds makes a photograph eligible to leave sooner, subject to the visibility budget. Replacement happens only after the old photograph is fully outside the viewport and the next asset is decoded; update its source, accessible label, dimensions, and aspect ratio there, then move it back into the field. Failed loads do not replace a photograph with a broken image. Every saved photo remains directly available in the viewer.
+
+Pointer inspection holds only its targeted photograph: mouse hover expires after .8 seconds, pointer-down after 1.2 seconds, and visible keyboard focus holds until blur. Other photographs continue moving. An open viewer pauses the field. Hidden documents cancel the animation loop; resumption resets the frame timestamp. Reduced motion stops continuous movement and automatic rotation, removes CSS transitions and smooth scrolling, retains scroll-responsive shading of a static field, and uses a brief opacity-only viewer transition.
 
 ### Photo viewer
 
-Use the native modal dialog, original image proportions, caption, optional date, and live count. Previous/next controls and arrow keys wrap through the full saved gallery; native Escape, Close, or the dialog's outside area close it. Lock body scrolling while open and retain native modal focus behavior. The image is capped at 72svh on desktop and 65svh on phones; dialog width is 90vw up to 74rem, narrowing to 88vw on phones.
+Use the native modal dialog, original image proportions, caption, optional date, and live count. Previous/next controls and arrow keys wrap through the full saved gallery; native Escape, Close, or the dialog's outside area close it. Lock body scrolling while open and retain native modal focus behavior. A source-photo FLIP animation enlarges the clicked rectangle into the centered viewer over 520ms; closing returns it over 280ms. Closing during enlargement reverses from its current visual state without jumping. Browse photos opens without a source rectangle. The image is capped at 72svh on desktop and 65svh on phones; dialog width is 90vw up to 74rem, narrowing to 88vw on phones.
 
 ### Gallery and local preview maintenance
 
-`src/data/gallery.json` is the sole gallery source; `src/pages/index.astro` owns production markup, styles, and the shared controller. `Manage Photos.command` launches the local editor. Its `tools/photo-editor/library.py` renderer derives preview HTML from the production source and substitutes saved gallery content between the `GALLERY`, `VIEWER_IMAGE`, and `GALLERY_DATA` marker pairs. Preserve these markers and keep the Python slot allocation synchronized with the Astro frontmatter when changing gallery rendering. Do not create a separate preview design.
+`src/data/gallery.json` is the sole gallery source; `src/pages/index.astro` owns production markup and styles and inlines the raw `src/scripts/photo-physics.js` and `src/scripts/photo-controller.js` sources. `Manage Photos.command` launches the local editor. Its `tools/photo-editor/library.py` renderer derives preview HTML from the production source and substitutes saved gallery content between the `GALLERY`, `VIEWER_IMAGE`, and `GALLERY_DATA` marker pairs. It embeds the same two raw motion scripts between `PHOTO_MOTION` markers. Preserve these markers and keep the Python slot allocation synchronized with the Astro frontmatter when changing gallery rendering. Do not create a separate preview design.
 
 The editor continues to manage order, captions, dates, image descriptions, imports, removals, saved preview, and publication. `tools/photo-editor/test_library.py` checks saved-preview behavior and `tools/test-photo-field.cjs` checks controller behavior. With scripting disabled, soften field photos, give reading blocks a solid ground, and hide Browse photos.
 
@@ -151,7 +153,7 @@ The editor continues to manage order, captions, dates, image descriptions, impor
 
 ### Do:
 - **Do** preserve the sage and evergreen identity, Georgia name, original photo colors, and contact logos.
-- **Do** preserve natural photo proportions, the portrait height cap, and the seven-slot limit.
+- **Do** preserve natural photo proportions, five phone / seven desktop active bodies, and the visible-resident budget.
 - **Do** maintain visible focus, keyboard browsing, reduced motion, hidden-document suspension, and optional dates.
 - **Do** derive the local saved preview from production source and keep gallery edge cases working.
 
@@ -159,4 +161,4 @@ The editor continues to manage order, captions, dates, image descriptions, impor
 - **Don't** add a navigation divider or a visible pause-photos control.
 - **Don't** add embedded metadata to the user's photographs; keep any provenance outside the image files.
 - **Don't** substitute a new visual direction for the approved photo field or make text drift with the photographs.
-- **Don't** duplicate gallery data or pile additional photos onto occupied field slots.
+- **Don't** duplicate gallery data, replace visible photographs, or pile additional photos onto occupied field bodies.

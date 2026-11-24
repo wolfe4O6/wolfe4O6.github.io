@@ -1,5 +1,7 @@
 ---
 import gallery from '../data/gallery.json';
+import physicsSource from '../scripts/photo-physics.js?raw';
+import controllerSource from '../scripts/photo-controller.js?raw';
 
 // Keep small galleries around the readable center rather than above it.
 const slots = gallery.length >= 7 ? [0, 1, 2, 3, 4, 5, 6]
@@ -19,7 +21,7 @@ const slots = gallery.length >= 7 ? [0, 1, 2, 3, 4, 5, 6]
     :root { color-scheme:light; --ground:#edf2e8; --ink:#1b392d; --muted:#526a58; --focus:#294f3d;
       background:var(--ground); color:var(--ink); scrollbar-color:#8ba18b var(--ground); }
     * { box-sizing:border-box; }
-    html { scroll-behavior:smooth; scroll-padding-top:6rem; }
+    html { scroll-behavior:smooth; scroll-padding-top:6rem; scrollbar-gutter:stable; }
     body { margin:0; font:1rem/1.6 system-ui,sans-serif; overflow-x:clip; }
     ::selection { background:#b8ceb6; color:var(--ink); }
     a { color:inherit; text-underline-offset:.25em; }
@@ -29,19 +31,33 @@ const slots = gallery.length >= 7 ? [0, 1, 2, 3, 4, 5, 6]
     .skip:focus { transform:none; }
     .contact-links { position:fixed; top:0; left:0; right:0; z-index:5; display:flex; align-items:center;
       justify-content:flex-end; gap:1.7rem; height:5rem; padding:env(safe-area-inset-top) 2.5rem 0;
-      background:var(--ground); }
+      background:transparent; isolation:isolate; }
+    .contact-links::before { content:""; position:absolute; z-index:-1; inset:0 0 -2.5rem;
+      background:linear-gradient(var(--ground),rgba(237,242,232,.92) 40%,rgba(237,242,232,0));
+      -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px);
+      -webkit-mask-image:linear-gradient(black 40%,transparent); mask-image:linear-gradient(black 40%,transparent);
+      pointer-events:none; }
     .contact-links a { display:inline-flex; align-items:center; gap:.5rem; min-height:44px; font-size:.95rem; text-decoration:none; }
     .contact-links a:hover { text-decoration:underline; }
     .contact-links .about-nav { margin-right:auto; }
     .contact-links svg { width:1.15rem; height:1.15rem; }
-    .photo-field { position:fixed; inset:0; overflow:clip; z-index:0; }
+    .photo-field { position:fixed; inset:0 0 auto; width:100%; height:100svh; overflow:clip; z-index:0;
+      -webkit-mask-image:linear-gradient(transparent,black 85px,black calc(100% - 65px),transparent);
+      mask-image:linear-gradient(transparent,black 85px,black calc(100% - 65px),transparent); }
+    .photo-field::before,.photo-field::after { content:""; position:absolute; left:0; right:0; height:110px;
+      z-index:3; pointer-events:none; -webkit-backdrop-filter:blur(9px); backdrop-filter:blur(9px); }
+    .photo-field::before { top:0; background:linear-gradient(var(--ground),transparent);
+      -webkit-mask-image:linear-gradient(black,transparent); mask-image:linear-gradient(black,transparent); }
+    .photo-field::after { bottom:0; background:linear-gradient(transparent,var(--ground));
+      -webkit-mask-image:linear-gradient(transparent,black); mask-image:linear-gradient(transparent,black); }
+    .photo-field.is-moving .float-photo { left:0; top:0; will-change:transform; }
     .float-photo { position:absolute; left:var(--x); top:var(--y); width:min(var(--width),calc(65svh * var(--ratio))); height:auto;
       aspect-ratio:var(--ratio); padding:0; border:0; border-radius:12px; background:#dbe4d7;
       box-shadow:0 10px 26px -16px rgba(27,57,45,.35); overflow:hidden;
       transition:box-shadow 220ms ease; touch-action:pan-y; }
     .float-photo:hover { box-shadow:0 18px 35px -15px rgba(27,57,45,.4); }
     .float-photo:focus-visible { z-index:4; outline-offset:4px; }
-    .float-photo img { width:100%; height:auto; display:block; }
+    .float-photo img { width:100%; height:100%; object-fit:contain; display:block; }
     .float-photo[data-slot="0"] { --x:30%; --y:-8%; --width:25vw; }
     .float-photo[data-slot="1"] { --x:3%; --y:50%; --width:22vw; }
     .float-photo[data-slot="2"] { --x:-4%; --y:14%; --width:28vw; }
@@ -71,7 +87,16 @@ const slots = gallery.length >= 7 ? [0, 1, 2, 3, 4, 5, 6]
     .page-footer a { display:inline-block; min-height:44px; padding:.5rem; }
     .viewer { width:min(90vw,74rem); max-width:none; max-height:94svh; padding:0; border:0;
       overflow:visible; background:transparent; color:var(--ink); }
-    .viewer::backdrop { background:rgba(237,242,232,.92); backdrop-filter:blur(14px); }
+    .viewer[open]::backdrop { background:rgba(237,242,232,.97); -webkit-backdrop-filter:blur(22px); backdrop-filter:blur(22px);
+      animation:backdrop-appear 420ms ease both; }
+    .viewer.is-closing::backdrop { animation:backdrop-leave 280ms ease both; }
+    .viewer[open] .viewer-bottom { animation:caption-appear 240ms 160ms ease both; }
+    .viewer.is-closing .viewer-bottom { animation:none; opacity:0; transition:opacity 140ms; }
+    @keyframes caption-appear { from { opacity:0; } to { opacity:1; } }
+    @keyframes backdrop-appear { from { background:rgba(237,242,232,0); -webkit-backdrop-filter:blur(0); backdrop-filter:blur(0); }
+      to { background:rgba(237,242,232,.97); -webkit-backdrop-filter:blur(22px); backdrop-filter:blur(22px); } }
+    @keyframes backdrop-leave { from { background:rgba(237,242,232,.97); -webkit-backdrop-filter:blur(22px); backdrop-filter:blur(22px); }
+      to { background:rgba(237,242,232,0); -webkit-backdrop-filter:blur(0); backdrop-filter:blur(0); } }
     .viewer-inner { display:flex; flex-direction:column; align-items:center; }
     .viewer-image { display:block; max-width:100%; max-height:72svh; width:auto; height:auto; border-radius:12px; }
     .viewer-bottom { display:flex; align-items:flex-start; gap:2rem; justify-content:space-between; width:min(100%,50rem); margin:1.5rem auto 0; }
@@ -112,7 +137,7 @@ const slots = gallery.length >= 7 ? [0, 1, 2, 3, 4, 5, 6]
     }
     @media (prefers-reduced-motion:reduce) {
       html { scroll-behavior:auto; }
-      *,*::before,*::after { transition-duration:0s !important; }
+      *,*::before,*::after { transition-duration:0s !important; animation:none !important; }
     }
     body:has(.viewer[open]) { overflow:hidden; }
     @media (scripting:none) { .float-photo { opacity:.55; } .identity,.about-copy { background:var(--ground); } .browse { display:none; } }
@@ -174,158 +199,8 @@ const slots = gallery.length >= 7 ? [0, 1, 2, 3, 4, 5, 6]
   <!-- GALLERY_DATA_START -->
   <script is:inline type="application/json" id="gallery-data" set:html={JSON.stringify(gallery).replaceAll('<', '\\u003c')}></script>
   <!-- GALLERY_DATA_END -->
-  <script is:inline>
-    (() => {
-      const gallery = JSON.parse(document.querySelector('#gallery-data').textContent);
-      if (!gallery.length) return;
-      const field = document.querySelector('.photo-field');
-      const photos = [...field.querySelectorAll('.float-photo')];
-      const zones = [...document.querySelectorAll('.reading-zone,.contact-links a,.hero-footer a,.hero-footer button,.page-footer a')];
-      const viewer = document.querySelector('.viewer');
-      const reduced = matchMedia('(prefers-reduced-motion: reduce)');
-      const narrow = matchMedia('(max-width:46rem)');
-      const viewerImage = viewer.querySelector('.viewer-image');
-      const caption = viewer.querySelector('.caption');
-      const count = viewer.querySelector('.count');
-      let selected = 0, hover = false, focused = false;
-      let clock = 0, previousTime = 0, frame = 0, velocity = 0;
-      let positions = [], zoneRects = [], viewHeight = innerHeight;
-      let scrollOffset = scrollY, scrollTarget = scrollY;
-      const speeds = [5.3, 7, 4.4, 6.2, 8.1, 5.7, 4.8];
-      let nextPhoto = photos.length, nextSlot = 0, nextSwap = 14, swap = null;
-
-      function measurePhoto(photo) {
-        return { x:photo.offsetLeft, y:photo.offsetTop, w:photo.offsetWidth,
-          h:photo.offsetWidth / Number(photo.style.getPropertyValue('--ratio')) };
-      }
-      // Keep the approved seven-photo composition as a window onto any size
-      // gallery. Extra photos enter one at a time, without stacking on a slot.
-      function advanceGallery() {
-        if (gallery.length <= photos.length || swap || clock < nextSwap) return;
-        const active = new Set(photos.map(photo => Number(photo.dataset.index)));
-        while (active.has(nextPhoto)) nextPhoto = (nextPhoto+1) % gallery.length;
-        const index = nextPhoto;
-        const slot = nextSlot++ % photos.length;
-        nextPhoto = (index+1) % gallery.length;
-        swap = { slot, index, ready:false, started:0, switched:false };
-        const loading = swap;
-        const image = new Image();
-        image.onload = () => {
-          if (swap === loading) { loading.ready = true; loading.started = clock; }
-        };
-        image.onerror = () => { if (swap === loading) { swap = null; nextSwap = clock+14; } };
-        image.src = gallery[index].src;
-      }
-      function swapOpacity(slot) {
-        if (!swap || !swap.ready || swap.slot !== slot) return 1;
-        const elapsed = clock-swap.started;
-        if (elapsed < .35) return Math.max(0,1-elapsed/.35);
-        if (!swap.switched) {
-          swap.switched = true;
-          const photo = gallery[swap.index], button = photos[slot], image = button.querySelector('img');
-          button.dataset.index = String(swap.index);
-          button.setAttribute('aria-label','View photo: '+(photo.caption || photo.alt));
-          button.style.setProperty('--ratio',String(photo.width/photo.height));
-          image.src = photo.src; image.alt = photo.alt;
-          image.width = photo.width; image.height = photo.height;
-          positions[slot] = measurePhoto(button);
-        }
-        if (elapsed < .7) return Math.min(1,(elapsed-.35)/.35);
-        swap = null; nextSwap = clock+14;
-        return 1;
-      }
-
-      function measure() {
-        viewHeight = innerHeight;
-        positions = photos.map(measurePhoto);
-        readZones();
-        render();
-      }
-      function readZones() { zoneRects = zones.map(zone => zone.getBoundingClientRect()); }
-      const wrap = (value, length) => ((value % length) + length) % length;
-      function render() {
-        positions.forEach((p, i) => {
-          const photo = photos[i];
-          const distance = clock * speeds[i % speeds.length] + scrollOffset * (.18 + (i % 3) * .07);
-          const y = narrow.matches
-            ? p.y + (reduced.matches ? 0 : Math.sin(clock*.055+i*1.4)*12) - scrollOffset*.025
-            : wrap(p.y - distance + p.h + 60, viewHeight + p.h + 120) - p.h - 60;
-          const x = p.x + (reduced.matches ? 0 : Math.sin(clock * .065 + i * 1.7) * (narrow.matches ? 9 : 18));
-          // A photograph gently recedes when it passes the reading area.
-          let nearText = 0;
-          zoneRects.forEach(r => {
-            const overlapX = Math.max(0, Math.min(x+p.w, r.right+24) - Math.max(x,r.left-24));
-            const overlapY = Math.max(0, Math.min(y+p.h,r.bottom+24) - Math.max(y,r.top-24));
-            nearText = Math.max(nearText, Math.min(1, overlapX / Math.min(p.w,80)) * Math.min(1,overlapY / Math.min(p.h,80)));
-          });
-          const edge = Math.min(1, Math.max(0,(y+p.h)/65), Math.max(0,(viewHeight-y)/65));
-          photo.style.transform = `translate3d(${x-p.x}px,${y-p.y}px,0)`;
-          photo.style.opacity = String((1 - nearText) * edge * swapOpacity(i));
-          photo.style.filter = nearText > .04 ? `blur(${(nearText*3).toFixed(2)}px)` : 'none';
-        });
-      }
-      function tick(now) {
-        const dt = previousTime ? Math.min((now-previousTime)/1000,.05) : 0;
-        previousTime = now;
-        if (!viewer.open && !hover && !focused) {
-          clock += dt * (1 + velocity);
-          velocity *= Math.exp(-dt*3.5);
-          scrollOffset += (scrollTarget-scrollOffset) * Math.min(1,dt*8);
-          advanceGallery();
-          render();
-        }
-        frame = requestAnimationFrame(tick);
-      }
-      function run() {
-        cancelAnimationFrame(frame); previousTime = 0;
-        if (!reduced.matches && !document.hidden) frame = requestAnimationFrame(tick);
-        else { velocity = 0; scrollOffset = scrollTarget; render(); }
-      }
-      function showPhoto(index) {
-        selected = wrap(index,gallery.length);
-        const photo = gallery[selected];
-        viewerImage.src = photo.src; viewerImage.alt = photo.alt;
-        viewerImage.width = photo.width; viewerImage.height = photo.height;
-        caption.replaceChildren(document.createTextNode(photo.caption || photo.alt));
-        if (photo.date) {
-          const date = document.createElement('time'); date.className = 'date'; date.dateTime = photo.date;
-          date.textContent = new Intl.DateTimeFormat('en-US',{month:'long',day:'numeric',year:'numeric',timeZone:'UTC'}).format(new Date(photo.date+'T00:00:00Z'));
-          caption.append(date);
-        }
-        count.textContent = `${selected+1} of ${gallery.length}`;
-        if (!viewer.open) viewer.showModal();
-      }
-      photos.forEach(photo => {
-        photo.addEventListener('click',() => showPhoto(Number(photo.dataset.index)));
-        photo.addEventListener('pointerenter',event => { if(event.pointerType === 'mouse') hover = true; });
-        photo.addEventListener('pointerleave',() => { hover = false; });
-        photo.addEventListener('focus',() => { focused = photo.matches(':focus-visible'); });
-        photo.addEventListener('blur',() => { focused = false; });
-      });
-      document.querySelector('.browse').addEventListener('click',() => showPhoto(0));
-      viewer.querySelector('.viewer-close').addEventListener('click',() => viewer.close());
-      viewer.querySelector('.previous').addEventListener('click',() => showPhoto(selected-1));
-      viewer.querySelector('.next').addEventListener('click',() => showPhoto(selected+1));
-      viewer.addEventListener('keydown',event => {
-        if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') {
-          event.preventDefault(); showPhoto(selected+(event.key === 'ArrowRight' ? 1 : -1));
-        }
-      });
-      viewer.addEventListener('click',event => { if (event.target === viewer) viewer.close(); });
-      viewer.addEventListener('close',() => { hover = false; });
-      addEventListener('scroll',() => {
-        scrollTarget = scrollY; readZones();
-        if (reduced.matches) { scrollOffset=scrollTarget; render(); }
-      },{passive:true});
-      addEventListener('wheel',event => {
-        if (!event.ctrlKey && !viewer.open && !reduced.matches) velocity = Math.max(-18,Math.min(18,velocity+event.deltaY*.012));
-      },{passive:true});
-      addEventListener('resize',measure);
-      reduced.addEventListener('change',run);
-      narrow.addEventListener('change',measure);
-      document.addEventListener('visibilitychange',run);
-      measure(); run();
-    })();
-  </script>
+  <!-- PHOTO_MOTION_START -->
+  <script is:inline set:html={physicsSource + '\n' + controllerSource}></script>
+  <!-- PHOTO_MOTION_END -->
 </body>
 </html>
