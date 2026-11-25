@@ -107,12 +107,12 @@
       },
       {
         "name": "photo-world",
-        "value": "five slots / two lanes below 700px; seven slots / three lanes at larger widths; shared upward speed 23 / 29px/s; frame delta capped at .05s",
-        "purpose": "Authored upward flow with fewer slots for small galleries; no collision response, wall bounces, photo/text forces, or individual hover holds."
+        "value": "ten slots / two lanes below 700px; twelve slots / three lanes at larger widths; shared upward speed 23 / 29px/s; frame delta capped at .05s",
+        "purpose": "Fuller upward field capped by gallery size; runtime cloning retains the seven-photo unscripted fallback. No collision response, wall bounces, photo/text forces, or individual hover holds."
       },
       {
         "name": "photo-separation",
-        "value": "14px phone / 24px desktop lane gap; sway ≤18px / 32px and ≤7.5% lane width; sin(time × .22 + slot × 1.8)",
+        "value": "14px phone / 24px desktop lane gap; sway ≤18px / 32px and ≤7.5% lane width; sin(time × .22 + slot × 1.8); lane phase offset .5 phone / .29 desktop; phone count >5 uses .77 compact sizing",
         "purpose": "Natural proportions fit each lane; shared spacing and staggered phases keep photographs separated while text overlap changes shading only."
       },
       {
@@ -122,7 +122,7 @@
       },
       {
         "name": "retirement-eligibility",
-        "value": "gray >.5 continuously for >3.2s; nonretired visible residents > target 3 phone / 4 desktop, capped by gallery size; fade 1.2s",
+        "value": "gray >.5 continuously for >3.2s; nonretired visible residents > target 7 phone / 6 desktop, capped by gallery size; fade 1.2s",
         "purpose": "Resident targets gate retirement, not an always-visible count. Retirement stays latched until the next cycle; no minimum clear-photo lifetime."
       },
       {
@@ -223,7 +223,7 @@
     ],
     "dos": [
       "**Do** preserve the sage and evergreen identity, Georgia name, original photo colors, and contact logos.",
-      "**Do** preserve natural photo proportions, five phone / seven desktop slots, shared upward flow with sideways sway, and the retirement-resident gate.",
+      "**Do** preserve natural photo proportions, ten phone / twelve desktop slots (capped by gallery size), shared upward flow with sideways sway, and the retirement-resident gate.",
       "**Do** maintain visible focus, keyboard browsing, reduced motion, hidden-document suspension, and optional dates.",
       "**Do** derive the local saved preview from production source and keep gallery edge cases working."
     ],
