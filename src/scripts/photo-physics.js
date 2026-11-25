@@ -31,14 +31,14 @@ class PhotoFlow {
     this.envelope = Math.max(68, Math.min(phone ? 168 : 270, this.height * (phone ? .20 : .29)));
     const rows = Math.ceil(this.bodies.length / this.columns);
     this.cycle = Math.max(this.height + this.envelope + 96, rows * (this.envelope + this.gap + 32));
-    this.minimumVisible = Math.min(this.bodies.length, phone ? 3 : 4);
+    this.minimumVisible = Math.min(this.bodies.length, phone ? 7 : 6);
     this.bodies.forEach((body, i) => {
       const lane = i % this.columns;
       const laneCount = this.bodies.filter(other => other.id % this.columns === lane).length;
       const row = Math.floor(i / this.columns);
       this.fitSize(body, sizes[i]);
       // Offset the streams so arrivals and departures never happen together.
-      body.centerY = ((row + .44 + lane * .29) / laneCount) * this.cycle - this.envelope / 2 - 48;
+      body.centerY = ((row + .44 + lane * (phone ? .5 : .29)) / laneCount) * this.cycle - this.envelope / 2 - 48;
       body.state = 'active'; body.retired = false; body.fade = 1; body.grayFor = 0;
       this.position(body);
     });

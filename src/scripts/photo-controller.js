@@ -36,6 +36,15 @@
     image.src=gallery[index].src;
     return record;
   }
+  // Keep the quiet seven-photo fallback, then fill the animated streams
+  // with more distinct photographs when JavaScript is available.
+  while (allButtons.length < Math.min(gallery.length, 12)) {
+    const button=allButtons[0].cloneNode(true);
+    button.hidden=true;
+    bind(button,allButtons.length);
+    field.append(button);
+    allButtons.push(button);
+  }
   allButtons.forEach(button=>asset(Number(button.dataset.index)));
 
   function prime() {
@@ -80,7 +89,7 @@
   }
   function configure() {
     const {width,height}=dimensions();
-    const desired=Math.min(allButtons.length,width<700?5:7);
+    const desired=Math.min(allButtons.length,width<700?10:12);
     if (!world || desired!==buttons.length) {
       pending.clear(); buttons=allButtons.slice(0,desired);
       const used=new Set();
