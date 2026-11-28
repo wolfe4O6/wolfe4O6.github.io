@@ -14,7 +14,7 @@ from urllib.parse import urlsplit
 UPSTREAM = ('100.93.108.20', 8100)
 MAPS = ('world', 'world_the_nether', 'world_the_end')
 MAP_ID = r'(?:world|world_the_nether|world_the_end)'
-STATIC = re.compile(r'(?:/|/index\.html|/(?:assets|lang)/[A-Za-z0-9_.-]+|/maps/' + MAP_ID + r'/(?:settings\.json|textures\.json(?:\.gz)?|live/(?:players|markers)\.json|assets/[A-Za-z0-9_.-]+\.(?:png|jpg|webp)|assets/playerheads/[a-fA-F0-9-]{32,36}\.png|tiles/[0-9]{1,2}/(?:[xz]-?[0-9]+/)+[xz]-?[0-9]+\.(?:prbm|png)(?:\.gz)?))\Z', re.ASCII)
+STATIC = re.compile(r'(?:/|/index\.html|/(?:assets|lang)/[A-Za-z0-9_.-]+|/maps/' + MAP_ID + r'/(?:settings\.json|textures\.json(?:\.gz)?|live/(?:players|markers)\.json|assets/[A-Za-z0-9_.-]+\.(?:png|jpg|webp)|assets/playerheads/[a-fA-F0-9-]{32,36}\.png|tiles/[0-9]{1,2}/x-?[0-9](?:/[0-9])*/z-?[0-9](?:/[0-9])*\.(?:prbm|png)(?:\.gz)?))\Z', re.ASCII)
 EVENTS = re.compile(r'/maps/' + MAP_ID + r'/live/sse\Z')
 BRIDGE = b"""const notify = () => parent.postMessage({type:'minecraft-map-view',hash:location.hash}, 'https://williamkearns.org');
 addEventListener('hashchange', notify); notify();

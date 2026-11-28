@@ -36,7 +36,7 @@ The website falls back to its saved map automatically. Do not use `tailscale ser
 
 ## Validation
 
-- 13 proxy tests: player JSON and head images across all three dimensions, SSE player/marker/tile events, gzip terrain, missing tiles, origin restrictions, blocked admin routes and write methods, and unavailable upstream.
+- 15 proxy tests (including nested positive and negative coordinate tile paths): player JSON and head images across all three dimensions, SSE player/marker/tile events, gzip terrain, missing tiles, origin restrictions, blocked admin routes and write methods, and unavailable upstream.
 - 2 installer tests using a temporary home and fake host commands: install/reinstall preserves private 443; conflicting 8443 aborts before installation.
 - Real BlueMap: health, three dimension settings, a PNG head, gzip terrain, and the online-player endpoint all returned successfully.
 - Browser: live terrain, dimension controls, top-down mode, and saved-map fallback after disconnect were checked in the local preview.
@@ -45,3 +45,7 @@ The website falls back to its saved map automatically. Do not use `tailscale ser
 Run tests with `python3 test_map_proxy.py` and `python3 test_installer.py`.
 
 References: [Tailscale Funnel CLI](https://tailscale.com/docs/reference/tailscale-cli/funnel), [BlueMap reverse proxy](https://bluemap.bluecolored.de/wiki/webserver/ReverseProxy.html).
+
+## Terrain beyond ±320 blocks
+
+The initial proxy incorrectly rejected BlueMap tile paths with digit subdirectories (for example, tile x=-13 uses `x-1/3/z0.prbm`). This caused already-rendered terrain around x=-400 to return 404 publicly. The updated installer fixes that path validation and tests a nested path before reporting success. Run the install command above again to update the map proxy. The existing Funnel endpoint is preserved without reconfiguring it; Minecraft is not restarted.

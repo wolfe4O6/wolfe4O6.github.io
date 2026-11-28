@@ -29,7 +29,7 @@ class Upstream(http.server.BaseHTTPRequestHandler):
         elif self.path.endswith('live/sse'):
             content_type = 'text/event-stream'
             body = b'event: player\ndata: {"name":"private-name","x":12345}\n\nevent: marker\ndata: {"private-marker":true}\n\nevent: tile\ndata: {"lod":0,"x":2,"y":3,"private-field":"hidden"}\n\n'
-        elif 'x999/' in self.path:
+        elif 'x9/9/9/' in self.path:
             status, body = 404, b'Missing tile'
         elif self.path.endswith('.prbm'):
             body = gzip.compress(b'actual-binary-tile')
@@ -82,8 +82,26 @@ class ProxyTests(unittest.TestCase):
         self.assertEqual(headers['Content-Encoding'], 'gzip')
         self.assertEqual(gzip.decompress(body), b'actual-binary-tile')
 
+    def test_nested_coordinate_tiles_are_forwarded(self):
+        # BlueMap splits every decimal digit into a directory: tile -13 is x-1/3.
+        for map_id in ('world', 'world_the_nether', 'world_the_end'):
+            for coordinates in ('x-1/3/z0', 'x0/z-1/3', 'x-1/3/z-1/4', 'x1/2/3/z4/5/6'):
+                with self.subTest(map_id=map_id, coordinates=coordinates):
+                    path = f'/maps/{map_id}/tiles/0/{coordinates}.prbm'
+                    status, headers, body = self.request(path)
+                    self.assertEqual(status, 200)
+                    self.assertEqual(gzip.decompress(body), b'actual-binary-tile')
+                    self.assertIn(path, self.upstream.calls)
+
+    def test_malformed_nested_tile_paths_are_denied(self):
+        for coordinates in ('x-1/admin/z0', 'x-1/../z0', 'x-1//3/z0', 'x-1/3/z0/admin',
+                            'x-1/3/z-1/commands', 'z0/x1', 'x1/z2/x3', 'x13/z0', 'x1/23/z0'):
+            with self.subTest(coordinates=coordinates):
+                self.assertEqual(self.request(f'/maps/world/tiles/0/{coordinates}.prbm')[0], 404)
+        self.assertEqual(self.upstream.calls, [])
+
     def test_absent_tile_is_empty_terrain(self):
-        status, headers, body = self.request('/maps/world/tiles/0/x999/z0.prbm')
+        status, headers, body = self.request('/maps/world/tiles/0/x9/9/9/z0.prbm')
         self.assertEqual(status, 204)
         self.assertEqual(body, b'')
         self.assertNotIn('Content-Length', headers)

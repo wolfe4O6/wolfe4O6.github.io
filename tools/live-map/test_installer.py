@@ -14,7 +14,7 @@ name=Path(sys.argv[0]).name; args=sys.argv[1:]; root=Path(os.environ['MAP_TEST_S
 with (root/'calls').open('a') as out: out.write(name+' '+ ' '.join(args)+'\\n')
 state=root/'serve.json'
 if name=='systemctl':
-    if 'is-active' in args: sys.exit(1)
+    if 'is-active' in args: sys.exit(0)  # Simulate an already-running map service; never probe host ports.
     sys.exit(0)
 if name=='loginctl': print('yes'); sys.exit(0)
 if name=='curl':

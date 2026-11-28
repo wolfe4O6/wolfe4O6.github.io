@@ -76,7 +76,7 @@ from urllib.parse import urlsplit
 UPSTREAM = ('100.93.108.20', 8100)
 MAPS = ('world', 'world_the_nether', 'world_the_end')
 MAP_ID = r'(?:world|world_the_nether|world_the_end)'
-STATIC = re.compile(r'(?:/|/index\.html|/(?:assets|lang)/[A-Za-z0-9_.-]+|/maps/' + MAP_ID + r'/(?:settings\.json|textures\.json(?:\.gz)?|live/(?:players|markers)\.json|assets/[A-Za-z0-9_.-]+\.(?:png|jpg|webp)|assets/playerheads/[a-fA-F0-9-]{32,36}\.png|tiles/[0-9]{1,2}/(?:[xz]-?[0-9]+/)+[xz]-?[0-9]+\.(?:prbm|png)(?:\.gz)?))\Z', re.ASCII)
+STATIC = re.compile(r'(?:/|/index\.html|/(?:assets|lang)/[A-Za-z0-9_.-]+|/maps/' + MAP_ID + r'/(?:settings\.json|textures\.json(?:\.gz)?|live/(?:players|markers)\.json|assets/[A-Za-z0-9_.-]+\.(?:png|jpg|webp)|assets/playerheads/[a-fA-F0-9-]{32,36}\.png|tiles/[0-9]{1,2}/x-?[0-9](?:/[0-9])*/z-?[0-9](?:/[0-9])*\.(?:prbm|png)(?:\.gz)?))\Z', re.ASCII)
 EVENTS = re.compile(r'/maps/' + MAP_ID + r'/live/sse\Z')
 BRIDGE = b"""const notify = () => parent.postMessage({type:'minecraft-map-view',hash:location.hash}, 'https://williamkearns.org');
 addEventListener('hashchange', notify); notify();
@@ -333,12 +333,22 @@ import json, sys
 from pathlib import Path
 assert json.loads(Path(sys.argv[1]).read_text()).get('ready') is True, 'Map proxy is not ready.'
 CHECK
+# Confirm nested BlueMap coordinate paths are no longer blocked.
+curl --noproxy '*' --fail --silent --show-error --max-time 10 http://127.0.0.1:8180/maps/world/tiles/0/x-1/3/z0.prbm -o /dev/null
 # Keep the user service running after logout and reboot, like the Minecraft service.
 if [[ "$(loginctl show-user "$(id -un)" -p Linger --value)" != yes ]]; then
   sudo loginctl enable-linger "$(id -un)"
 fi
 # Only publish the dedicated map port. Never reset Serve or touch port 443.
-if tailscale funnel --bg --https=8443 http://127.0.0.1:8180 >"$setup_tmp/funnel.txt" 2>&1; then
+if python3 - "$setup_tmp/before.json" <<'CHECK'
+import json, sys
+from pathlib import Path
+before=json.loads(Path(sys.argv[1]).read_text())
+sys.exit(0 if before.get('AllowFunnel', {}).get('omarchy.tail715766.ts.net:8443') is True else 1)
+CHECK
+then
+  echo 'Existing public map endpoint preserved.'
+elif tailscale funnel --bg --https=8443 http://127.0.0.1:8180 >"$setup_tmp/funnel.txt" 2>&1; then
   cat "$setup_tmp/funnel.txt"
 else
   cat "$setup_tmp/funnel.txt" >&2
