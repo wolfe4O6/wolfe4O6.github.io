@@ -1,0 +1,155 @@
+---
+import metadata from '../data/minecraft-map.json';
+const dimensions = [
+  { key: 'overworld', id: 'world', name: 'Overworld', icon: '◈' },
+  { key: 'nether', id: 'world_the_nether', name: 'Nether', icon: '◇' },
+  { key: 'end', id: 'world_the_end', name: 'End', icon: '✧' },
+];
+---
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#edf2e8" />
+  <meta name="description" content="Minecraft world map. Overworld, Nether, and End." />
+  <meta name="referrer" content="no-referrer" />
+  <link rel="canonical" href="https://williamkearns.org/minecraft/" />
+  <title>Minecraft Map · William Kearns</title>
+</head>
+<body data-dimension="overworld">
+  <header class="site-header">
+    <a class="home" href="/">William Kearns<span aria-hidden="true"> / </span><span>Minecraft</span></a>
+    <a class="back" href="/">Back to home</a>
+  </header>
+  <main class="atlas" aria-label="Minecraft map">
+    <div class="toolbar">
+      <div class="dimensions" role="tablist" aria-label="Dimension">
+        {dimensions.map((dimension, i) => (
+          <button id={`tab-${dimension.key}`} type="button" role="tab" aria-selected={i === 0 ? 'true' : 'false'}
+            aria-controls="map-panel" tabindex={i === 0 ? 0 : -1} data-key={dimension.key} data-map-id={dimension.id}
+            data-rendered={String(metadata.maps[dimension.id].rendered)}>
+            <span aria-hidden="true">{dimension.icon}</span>{dimension.name}
+          </button>
+        ))}
+      </div>
+      <div class="map-actions">
+        <div class="views" aria-label="Map view">
+          <button type="button" data-view="perspective" aria-pressed="true">3D</button>
+          <button type="button" data-view="flat" aria-pressed="false">Top-down</button>
+        </div>
+        <button class="icon-button" id="reset" type="button" aria-label="Reset map view" title="Reset view"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 10a8 8 0 1 1 1 7M4 4v6h6" /></svg></button>
+        <button class="icon-button" id="fullscreen" type="button" aria-label="Fullscreen map" title="Fullscreen"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5" /></svg></button>
+      </div>
+    </div>
+    <section id="map-panel" role="tabpanel" aria-labelledby="tab-overworld">
+      <iframe id="world-map" title="Overworld map" src="/minecraft/viewer/#world:0:16:-32:650:0.1:0.19:0:0:perspective" referrerpolicy="no-referrer" allow="fullscreen" allowfullscreen></iframe>
+      <div class="empty" id="empty" hidden><div class="portal" aria-hidden="true"><i></i></div><p>Not mapped yet.</p></div>
+    </section>
+    <noscript><p><a href="/minecraft/viewer/">Open the map viewer</a></p></noscript>
+  </main>
+  <script>
+    const frame = document.querySelector<HTMLIFrameElement>('#world-map')!;
+    const tabs = Array.from(document.querySelectorAll<HTMLButtonElement>('[role="tab"]'));
+    const views = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-view]'));
+    const panel = document.querySelector<HTMLElement>('#map-panel')!;
+    const empty = document.querySelector<HTMLElement>('#empty')!;
+    let selected = tabs[0];
+    let view = 'perspective';
+    const url = () => `/minecraft/viewer/#${selected.dataset.mapId}:0:16:-32:${selected.dataset.key === 'overworld' ? 650 : 500}:0.1:0.19:0:0:${view}`;
+    function update(navigate = true) {
+      document.body.dataset.dimension = selected.dataset.key;
+      tabs.forEach(tab => {const active = tab === selected; tab.setAttribute('aria-selected', String(active)); tab.tabIndex = active ? 0 : -1;});
+      views.forEach(button => button.setAttribute('aria-pressed', String(button.dataset.view === view)));
+      panel.setAttribute('aria-labelledby', selected.id);
+      frame.title = `${selected.textContent!.trim()} map`;
+      const rendered = selected.dataset.rendered === 'true';
+      empty.hidden = rendered;
+      frame.hidden = !rendered;
+      [...views, document.querySelector<HTMLButtonElement>('#reset')!].forEach(button => button.disabled = !rendered);
+      if (navigate && rendered) frame.src = url();
+    }
+    function select(tab: HTMLButtonElement, changeHash = true) {
+      selected = tab; update();
+      if (changeHash) history.replaceState(null, '', `#${selected.dataset.key}`);
+    }
+    tabs.forEach((tab, index) => {
+      tab.addEventListener('click', () => select(tab));
+      tab.addEventListener('keydown', event => {
+        let next = index;
+        if (event.key === 'ArrowRight' || event.key === 'ArrowDown') next = (index + 1) % tabs.length;
+        else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') next = (index + tabs.length - 1) % tabs.length;
+        else if (event.key === 'Home') next = 0;
+        else if (event.key === 'End') next = tabs.length - 1;
+        else return;
+        event.preventDefault(); tabs[next].focus(); select(tabs[next]);
+      });
+    });
+    views.forEach(button => button.addEventListener('click', () => {view = button.dataset.view!; update();}));
+    document.querySelector('#reset')!.addEventListener('click', () => update());
+    document.querySelector('#fullscreen')!.addEventListener('click', async () => {
+      try { if (document.fullscreenElement) await document.exitFullscreen(); else await panel.requestFullscreen(); }
+      catch { /* Keep the full-height map usable when the browser doesn't support fullscreen. */ }
+    });
+    frame.addEventListener('load', () => {
+      frame.contentWindow?.addEventListener('hashchange', () => {
+        const id = frame.contentWindow!.location.hash.slice(1).split(':')[0];
+        const tab = tabs.find(tab => tab.dataset.mapId === id);
+        if (tab && tab !== selected) {selected = tab; history.replaceState(null, '', `#${tab.dataset.key}`); update(false);}
+      });
+    });
+    const fromHash = () => {const tab = tabs.find(tab => `#${tab.dataset.key}` === location.hash); if (tab) select(tab, false);};
+    window.addEventListener('hashchange', fromHash);
+    fromHash();
+  </script>
+</body>
+</html>
+<style is:global>
+  :root { color-scheme:light; --ground:#edf2e8; --ink:#1b392d; --muted:#526a58; --accent:#294f3d; --wash:#dce7d5; background:var(--ground); color:var(--ink); }
+  * { box-sizing:border-box; }
+  body { margin:0; font:1rem/1.6 system-ui,sans-serif; }
+  body[data-dimension="nether"] { --accent:#914e3f; --wash:#eadcd2; }
+  body[data-dimension="end"] { --accent:#6c5a80; --wash:#e5dfed; }
+  a { color:inherit; text-underline-offset:.25em; }
+  button { font:inherit; color:inherit; cursor:pointer; }
+  a:focus-visible,button:focus-visible { outline:2px solid var(--accent); outline-offset:4px; }
+  [hidden] { display:none !important; }
+  .site-header { height:4.5rem; padding:0 2rem; display:flex; align-items:center; justify-content:space-between; gap:1rem; }
+  .site-header a { display:inline-flex; min-height:44px; align-items:center; text-decoration:none; font-size:.9rem; }
+  .site-header a:hover { text-decoration:underline; }
+  .home span:first-child { margin:0 .8rem; opacity:.35; }
+  .home span:last-child,.back { color:var(--muted); }
+  .atlas { display:flex; flex-direction:column; gap:.9rem; padding:0 1.5rem 1.5rem; height:calc(100svh - 4.5rem); min-height:480px; }
+  .toolbar { display:flex; align-items:center; justify-content:space-between; gap:1rem; }
+  .dimensions,.map-actions,.views { display:flex; align-items:center; }
+  .dimensions { gap:.4rem; }
+  .dimensions button { display:inline-flex; align-items:center; justify-content:center; gap:.5rem; min-height:44px; padding:.4rem 1rem; border:1px solid transparent; border-radius:7px; background:transparent; font-size:.9rem; }
+  .dimensions button span { color:var(--accent); font:1.4rem/1 Georgia,serif; }
+  .dimensions button[aria-selected="true"] { background:var(--wash); border-color:color-mix(in srgb,var(--accent) 24%,transparent); }
+  .dimensions button:hover { background:var(--wash); }
+  .map-actions { gap:.7rem; }
+  .views { padding:3px; border:1px solid #bccab7; border-radius:6px; }
+  .views button { min-height:34px; padding:.25rem .75rem; border:0; border-radius:3px; background:transparent; font-size:.8rem; }
+  .views button[aria-pressed="true"] { color:var(--ground); background:var(--accent); }
+  .views button:disabled,.icon-button:disabled { opacity:.4; cursor:default; }
+  .icon-button { height:40px; width:40px; border:1px solid #bccab7; border-radius:6px; background:transparent; display:grid; place-items:center; }
+  .icon-button:hover { background:var(--wash); }
+  .icon-button svg { width:17px; height:17px; fill:none; stroke:currentColor; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; }
+  #map-panel { position:relative; flex:1; min-height:0; background:#101713; border:1px solid #b8c6b1; border-radius:12px; overflow:hidden; box-shadow:0 18px 45px -30px #1b392d55; }
+  #map-panel:fullscreen { border:0; border-radius:0; width:100vw; height:100vh; }
+  iframe { display:block; width:100%; height:100%; position:absolute; inset:0; border:0; }
+  .empty { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:2rem; text-align:center; background:radial-gradient(ellipse at 50% 40%,color-mix(in srgb,var(--accent) 28%,#101713),#101713 75%); color:#d9e1d3; }
+  .empty p { margin:2rem 0 0; font:400 1.7rem Georgia,serif; }
+  .portal { position:relative; width:70px; height:100px; border:8px solid color-mix(in srgb,var(--accent) 70%,#101713); border-radius:3px; transform:perspective(400px) rotateY(-18deg) rotateZ(5deg); box-shadow:0 0 70px color-mix(in srgb,var(--accent) 40%,transparent); }
+  .portal i { position:absolute; inset:3px; background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 35%,#101713),var(--accent)); opacity:.75; }
+  @media (max-width:660px) {
+    .site-header { height:4rem; padding:0 1rem; } .site-header a { font-size:.8rem; }
+    .home span:first-child { margin:0 .5rem; } .back { display:none !important; }
+    .atlas { height:calc(100svh - 4rem); padding:0 .75rem .75rem; gap:.7rem; }
+    .toolbar { flex-wrap:wrap; gap:.6rem; }
+    .dimensions { flex:1; justify-content:space-between; gap:.25rem; }
+    .dimensions button { padding:.35rem .7rem; font-size:.8rem; gap:.3rem; }
+    .map-actions { width:100%; justify-content:flex-end; gap:.5rem; }
+    .views { margin-right:auto; } .views button { padding:.25rem 1rem; }
+  }
+</style>

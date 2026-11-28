@@ -1,0 +1,17 @@
+{
+  "exportedAt": "2026-11-28T00:32:38.580491+00:00",
+  "maps": {
+    "world": {
+      "rendered": true,
+      "tiles": 254
+    },
+    "world_the_nether": {
+      "rendered": false,
+      "tiles": 0
+    },
+    "world_the_end": {
+      "rendered": false,
+      "tiles": 0
+    }
+  }
+}
