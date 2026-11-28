@@ -34,6 +34,7 @@ const dimensions = [
         ))}
       </div>
       <div class="map-actions">
+        <span class="connection-status" id="connection-status" role="status">Saved map</span>
         <div class="views" aria-label="Map view">
           <button type="button" data-view="perspective" aria-pressed="true">3D</button>
           <button type="button" data-view="flat" aria-pressed="false">Top-down</button>
@@ -54,16 +55,20 @@ const dimensions = [
     const views = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-view]'));
     const panel = document.querySelector<HTMLElement>('#map-panel')!;
     const empty = document.querySelector<HTMLElement>('#empty')!;
+    const status = document.querySelector<HTMLElement>('#connection-status')!;
+    const liveOrigin = 'https://omarchy.tail715766.ts.net:8443';
+    let live = false;
+    let liveMaps: Record<string, { rendered: boolean }> = {};
     let selected = tabs[0];
     let view = 'perspective';
-    const url = () => `/minecraft/viewer/#${selected.dataset.mapId}:0:16:-32:${selected.dataset.key === 'overworld' ? 650 : 500}:0.1:0.19:0:0:${view}`;
+    const url = () => `${live ? liveOrigin + '/' : '/minecraft/viewer/'}#${selected.dataset.mapId}:0:16:-32:${selected.dataset.key === 'overworld' ? 650 : 500}:0.1:0.19:0:0:${view}`;
     function update(navigate = true) {
       document.body.dataset.dimension = selected.dataset.key;
       tabs.forEach(tab => {const active = tab === selected; tab.setAttribute('aria-selected', String(active)); tab.tabIndex = active ? 0 : -1;});
       views.forEach(button => button.setAttribute('aria-pressed', String(button.dataset.view === view)));
       panel.setAttribute('aria-labelledby', selected.id);
-      frame.title = `${selected.textContent!.trim()} map`;
-      const rendered = selected.dataset.rendered === 'true';
+      frame.title = `${selected.dataset.key === 'overworld' ? 'Overworld' : selected.dataset.key === 'nether' ? 'Nether' : 'End'} map`;
+      const rendered = live ? liveMaps[selected.dataset.mapId!]?.rendered === true : selected.dataset.rendered === 'true';
       empty.hidden = rendered;
       frame.hidden = !rendered;
       [...views, document.querySelector<HTMLButtonElement>('#reset')!].forEach(button => button.disabled = !rendered);
@@ -91,16 +96,47 @@ const dimensions = [
       try { if (document.fullscreenElement) await document.exitFullscreen(); else await panel.requestFullscreen(); }
       catch { /* Keep the full-height map usable when the browser doesn't support fullscreen. */ }
     });
-    frame.addEventListener('load', () => {
-      frame.contentWindow?.addEventListener('hashchange', () => {
-        const id = frame.contentWindow!.location.hash.slice(1).split(':')[0];
+    function syncMap(hash: string) {
+        const [id, ...parts] = hash.slice(1).split(':');
         const tab = tabs.find(tab => tab.dataset.mapId === id);
-        if (tab && tab !== selected) {selected = tab; history.replaceState(null, '', `#${tab.dataset.key}`); update(false);}
-      });
+        const mode = parts.at(-1);
+        if (mode === 'flat' || mode === 'perspective') view = mode;
+        if (tab) {selected = tab; history.replaceState(null, '', `#${tab.dataset.key}`); update(false);}
+    }
+    frame.addEventListener('load', () => {
+      if (live) return;
+      try {
+        frame.contentWindow?.addEventListener('hashchange', () => syncMap(frame.contentWindow!.location.hash));
+      } catch { /* A prior live frame may finish loading while the saved map takes over. */ }
+    });
+    window.addEventListener('message', event => {
+      if (live && event.origin === liveOrigin && event.source === frame.contentWindow &&
+          event.data?.type === 'minecraft-map-view' && typeof event.data.hash === 'string') syncMap(event.data.hash);
     });
     const fromHash = () => {const tab = tabs.find(tab => `#${tab.dataset.key}` === location.hash); if (tab) select(tab, false);};
     window.addEventListener('hashchange', fromHash);
     fromHash();
+    async function checkLive() {
+      try {
+        const response = await fetch(`${liveOrigin}/health.json`, {cache:'no-store', credentials:'omit', signal:AbortSignal.timeout(5000)});
+        if (!response.ok) throw new Error('Map unavailable');
+        const health = await response.json();
+        if (health.ready !== true || !health.maps || !tabs.every(tab => typeof health.maps[tab.dataset.mapId!]?.rendered === 'boolean')) throw new Error('Invalid map status');
+        const changed = !live || tabs.some(tab => liveMaps[tab.dataset.mapId!]?.rendered !== health.maps[tab.dataset.mapId!]?.rendered);
+        liveMaps = health.maps; live = true;
+        status.textContent = 'Live'; status.dataset.live = 'true';
+        status.title = 'Live terrain and player locations';
+        if (changed) update();
+      } catch {
+        const changed = live; live = false;
+        status.textContent = 'Saved map'; status.dataset.live = 'false';
+        status.title = 'Live connection unavailable. Showing the saved map.';
+        if (changed) update();
+      }
+    }
+    void checkLive();
+    window.setInterval(() => {if (!document.hidden) void checkLive();}, 30000);
+    document.addEventListener('visibilitychange', () => {if (!document.hidden) void checkLive();});
   </script>
 </body>
 </html>
@@ -128,6 +164,9 @@ const dimensions = [
   .dimensions button[aria-selected="true"] { background:var(--wash); border-color:color-mix(in srgb,var(--accent) 24%,transparent); }
   .dimensions button:hover { background:var(--wash); }
   .map-actions { gap:.7rem; }
+  .connection-status { color:var(--muted); font-size:.75rem; white-space:nowrap; }
+  .connection-status::before { content:''; display:inline-block; width:6px; height:6px; border-radius:50%; background:#96a28f; margin-right:.4rem; vertical-align:middle; }
+  .connection-status[data-live="true"]::before { background:#3b804c; box-shadow:0 0 0 3px #3b804c18; }
   .views { padding:3px; border:1px solid #bccab7; border-radius:6px; }
   .views button { min-height:34px; padding:.25rem .75rem; border:0; border-radius:3px; background:transparent; font-size:.8rem; }
   .views button[aria-pressed="true"] { color:var(--ground); background:var(--accent); }
