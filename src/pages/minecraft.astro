@@ -127,7 +127,8 @@ const dimensions = [
         status.textContent = 'Live'; status.dataset.live = 'true';
         status.title = 'Live terrain and player locations';
         if (changed) update();
-      } catch {
+      } catch (error) {
+        console.warn('Live map connection unavailable:', error);
         const changed = live; live = false;
         status.textContent = 'Saved map'; status.dataset.live = 'false';
         status.title = 'Live connection unavailable. Showing the saved map.';
